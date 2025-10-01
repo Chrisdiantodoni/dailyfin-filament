@@ -1,0 +1,148 @@
+<?php
+
+namespace App\Filament\Resources\CounterServiceDeposits\Tables;
+
+use App\Exports\ExportGeneral;
+use App\Filament\Resources\CounterServiceDeposits\CounterServiceDepositResource;
+use App\Models\CsServiceSparepart;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
+use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
+
+class CounterServiceDepositsTable
+{
+
+
+    public static function configure(Table $table): Table
+    {
+        return $table
+            ->columns([
+                TextColumn::make('date_published')->label('Tanggal')->date('d M Y'),
+                TextColumn::make('users.name')->label('Nama Pengguna')->searchable(query: function ($query, $search) {
+                    return $query->whereHas('users', function ($q) use ($search) {
+                        $q->where('name', 'like', "%{$search}%");
+                    });
+                }),
+                TextColumn::make('dealers.dealer_name')->label('Dealer')->searchable(query: function ($query, $search) {
+                    return $query->whereHas('dealers', function ($q) use ($search) {
+                        $q->where('dealer_name', 'like', "%{$search}%");
+                    });
+                }),
+                TextColumn::make('roles')
+                    ->label('Bagian')
+                    ->getStateUsing(fn($record) => $record->users->roles->pluck('name')->join(', '))
+                    ->searchable(query: function ($query, $search) {
+                        return $query->whereHas('users.roles', function ($q) use ($search) {
+                            $q->where('name', 'like', "%{$search}%");
+                        });
+                    })
+                    ->getStateUsing(fn($record) => $record->users->roles->first()->name ?? 'Tidak Diketahui'),
+                TextColumn::make('cash')->label('Setoran Tunai')->searchable(query: function ($query, $search) {
+                    return $query->whereHas('service_nominal_dtls', function ($query) use ($search) {
+                        return $query->where('cash', 'like', "%{$search}%");
+                    });
+                })
+                    ->getStateUsing(fn($record) => formatNumber($record->service_nominal_dtls->cash)),
+                TextColumn::make('credit')->label('Setoran Transfer')->searchable(query: function ($query, $search) {
+                    return $query->whereHas('service_nominal_dtls', function ($query) use ($search) {
+                        return $query->where('transfer', 'like', "%{$search}%");
+                    });
+                })
+                    ->getStateUsing(fn($record) => formatNumber($record->service_nominal_dtls->transfer)),
+                TextColumn::make('total_expense')->label('Nominal Pengeluaran')->searchable()
+                    ->getStateUsing(fn($record) => formatNumber($record->total_expense)),
+                TextColumn::make('total_income')->label('Total Disetor')->searchable()
+                    ->getStateUsing(fn($record) => formatNumber($record->total_income)),
+                TextColumn::make('proof')
+                    ->label('Bukti Transfer')
+                    ->getStateUsing(fn($record) => $record->service_images->count() > 0 ? 'Lihat' : 'Tidak ada Gambar.')
+                    ->color(fn($record) => $record->service_images->count() > 0 ? 'primary' : 'gray')
+                    ->action(
+                        Action::make('lihatBukti')
+                            ->label('Lihat Bukti Transfer')
+                            ->icon('heroicon-o-photo')
+                            ->modalHeading('Bukti Transfer')
+                            ->modalContent(fn($record) => view('filament.tables.images-modal', [
+                                'images' => $record->service_images,
+                                'folder' => 'sparepart_deposit',
+                            ]))
+                            ->modalSubmitAction(false)
+                            ->modalCancelActionLabel('Tutup')
+                            ->visible(fn($record) => $record->service_images->count() > 0)
+                    ),
+                TextColumn::make('status')
+                    ->label('Status')
+                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                        'request' => 'Menunggu',
+                        'approve' => 'Disetujui',
+                        'reject'  => 'Ditolak',
+                        default   => ucfirst($state),
+                    })
+                    ->icon(fn(string $state): string => match ($state) {
+                        'request' => 'heroicon-o-arrow-path',   // mirip fa-rotate-right
+                        'approve' => 'heroicon-o-check',
+                        'reject'  => 'heroicon-o-x-mark',
+                        default   => 'heroicon-o-question-mark-circle',
+                    })
+                    ->color(fn(string $state): string => match ($state) {
+                        'request' => 'primary',
+                        'approve' => 'success',
+                        'reject'  => 'danger',
+                        default   => 'gray',
+                    }),
+            ])
+            ->recordUrl(null)
+            ->recordActions([
+
+                Action::make('View')->icon('heroicon-o-eye')
+                    ->color('primary')
+                    ->url(fn($record) => CounterServiceDepositResource::getUrl('detail', ['record' => $record])),
+                EditAction::make()->hidden(fn() => cannot('Coordinator Resources'))->color('danger'),
+
+
+            ])->filters([
+                Filter::make('date_range')
+                    ->schema([
+                        DatePicker::make('start_date')->label('Dari Tanggal'),
+                        DatePicker::make('end_date')->label('Sampai Tanggal'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        return $query
+                            ->when($data['start_date'], fn($q) => $q->whereDate('date_published', '>=', $data['start_date']))
+                            ->when($data['end_date'], fn($q) => $q->whereDate('date_published', '<=', $data['end_date']));
+                    }),
+                Filter::make('status')
+                    ->label('Status Workflow')
+                    ->schema([
+                        \Filament\Forms\Components\Select::make('status')
+                            ->options([
+                                'request' => 'Menunggu',
+                                'approve' => 'Disetujui',
+                                'reject'  => 'Ditolak',
+                            ])
+                            ->placeholder('Semua'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        if (! isset($data['status'])) {
+                            return $query;
+                        }
+                        return $query->where('status', $data['status']);
+                    }),
+            ])
+            ->headerActions([])
+            ->toolbarActions([
+                // BulkActionGroup::make([
+                //     DeleteBulkAction::make(),
+                // ]),
+            ]);
+    }
+}

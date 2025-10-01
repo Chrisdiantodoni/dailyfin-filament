@@ -1,0 +1,63 @@
+@import "../../../../vendor/filament/filament/resources/css/theme.css";
+@import "tailwindcss";
+@import "tailwindcss-v4";
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+/* Rich Editor Styles */
+/* blockquote {
+    border-left: 4px solid rgb(var(--primary-500));
+    margin: 1.5em 0;
+    padding-left: 1em;
+    color: rgb(107 114 128);
+    font-style: italic;
+}
+
+ul,
+ol {
+    padding-left: 1.5em;
+}
+
+ul {
+    list-style-type: disc;
+}
+
+ol {
+    list-style-type: decimal;
+}
+
+li {
+    margin: 0.5em 0;
+}
+
+h1 {
+    font-size: 2em;
+    font-weight: 600;
+    margin: 1em 0 0.5em 0;
+}
+h2 {
+    font-size: 1.5em;
+    font-weight: 600;
+    margin: 1em 0 0.5em 0;
+}
+h3 {
+    font-size: 1.25em;
+    font-weight: 600;
+    margin: 1em 0 0.5em 0;
+}
+h4 {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin: 1em 0 0.5em 0;
+}
+h5 {
+    font-size: 1em;
+    font-weight: 600;
+    margin: 1em 0 0.5em 0;
+}
+h6 {
+    font-size: 0.9em;
+    font-weight: 600;
+    margin: 1em 0 0.5em 0;
+} */
