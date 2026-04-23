@@ -176,7 +176,11 @@
 
                         <td colspan="4"
                             style="border-left: 1.5px solid white; border-right: 1.5px solid black; border-bottom: 1.5px solid black;">
-                            <b>{{ $exportData->description }}</b>
+                            @if (!empty($exportData->description2))
+                                {!! $exportData->description2 !!}
+                            @else
+                                {{ $exportData->description }}
+                            @endif
                         </td>
 
 

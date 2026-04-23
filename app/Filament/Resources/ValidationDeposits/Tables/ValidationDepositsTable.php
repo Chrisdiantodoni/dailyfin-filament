@@ -74,6 +74,13 @@ class ValidationDepositsTable
                     }),
                 TextColumn::make('deadline_submit')
                     ->label('Status Deadline Submit')
+                    ->getStateUsing(function ($record) {
+                        // return "$record->created_at, $record->date_published";
+                        return isLateValidateDeposit($record->created_at, $record->date_published)
+                            ? 'Late'
+                            : 'On-time';
+                    })
+
                     ->formatStateUsing(function ($record) {
                         return isLateValidateDeposit($record->created_at, $record->date_published)
                             ? 'Late'
@@ -91,6 +98,7 @@ class ValidationDepositsTable
                     }),
                 TextColumn::make('deadline_approval')
                     ->label('Status Deadline Approval')
+                    ->getStateUsing(fn($record) => $record->status_deadline)
                     ->formatStateUsing(function ($record) {
                         return $record->status_deadline == "Late"
                             ? 'Late'
@@ -147,22 +155,33 @@ class ValidationDepositsTable
                             ->placeholder('Semua'),
                     ])
                     ->query(function ($query, array $data) {
-                        if (! $data['deadline']) {
+                        if (empty($data['deadline'])) {
                             return $query;
                         }
 
                         return $query->where(function ($q) use ($data) {
                             if ($data['deadline'] === 'late') {
-                                $q->whereRaw("created_at > DATE_ADD(date_published, INTERVAL 1 DAY) + INTERVAL 14 HOUR");
+                                // Deadline = date_published + 1 hari jam 12:00
+                                $q->whereRaw("
+                    created_at > TIMESTAMPADD(
+                        HOUR, 12,
+                        DATE_ADD(date_published, INTERVAL 1 DAY)
+                    )
+                ");
                             }
 
                             if ($data['deadline'] === 'on_time') {
-                                $q->whereRaw("created_at <= DATE_ADD(date_published, INTERVAL 1 DAY) + INTERVAL 14 HOUR");
+                                $q->whereRaw("
+                    created_at <= TIMESTAMPADD(
+                        HOUR, 12,
+                        DATE_ADD(date_published, INTERVAL 1 DAY)
+                    )
+                ");
                             }
                         });
                     }),
 
-                Filter::make('status_deadline')
+                Filter::make('status_deadline_approval')
                     ->label('Status Deadline Approval')
                     ->schema([
                         \Filament\Forms\Components\Select::make('deadline_approval')
@@ -173,15 +192,15 @@ class ValidationDepositsTable
                             ->placeholder('Semua'),
                     ])
                     ->query(function ($query, array $data) {
-                        if (! isset($data['deadline'])) {
+                        if (! isset($data['deadline_approval'])) {
                             return $query;
                         }
 
-                        if ($data['deadline'] === 'late') {
+                        if ($data['deadline_approval'] === 'late') {
                             return $query->whereTime('status_deadline', '=', 'Late');
                         }
 
-                        if ($data['deadline'] === 'on_time') {
+                        if ($data['deadline_approval'] === 'on_time') {
                             return $query->whereTime('status_deadline', '<=', 'On-time');
                         }
 

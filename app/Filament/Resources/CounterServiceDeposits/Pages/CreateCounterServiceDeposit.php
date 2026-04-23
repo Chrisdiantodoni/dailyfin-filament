@@ -10,6 +10,7 @@ use App\Models\ServiceImage;
 use App\Models\ServiceNominalDtl;
 use App\Models\SparepartImage;
 use App\Models\User;
+use App\Services\ImageCompressionService;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\DatePicker;
@@ -17,7 +18,11 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Intervention\Image\Drivers\Gd\Driver;
 use Intervention\Image\Image;
 use Intervention\Image\ImageManager;
@@ -26,6 +31,13 @@ use Livewire\Component as LivewireComponent;
 class CreateCounterServiceDeposit extends CreateRecord
 {
     protected static string $resource = CounterServiceDepositResource::class;
+
+    protected $imageService;
+
+    public function boot(ImageCompressionService $imageService)
+    {
+        $this->imageService = $imageService;
+    }
     public function getBreadcrumbs(): array
     {
         return [
@@ -64,21 +76,45 @@ class CreateCounterServiceDeposit extends CreateRecord
         $approval_data->status = isCoordinator() ? "approve" : "request";
         $approval_data->save();
 
-        foreach ($data['service_images_upload'] as $filePath) {
+
+        foreach ($data['service_images_upload'] ?? [] as $filePath) {
+            if (!Storage::disk('public')->exists($filePath)) {
+                continue;
+            }
+
+            $absolutePath = Storage::disk('public')->path($filePath);
+
+            $uploadedFile = new UploadedFile(
+                $absolutePath,
+                basename($absolutePath),
+                mime_content_type($absolutePath),
+                null,
+                true
+            );
+
+            // 1. Generate Nama File menggunakan ULID
+            // Hasilnya: 01H6XCPN8... .webp
+            $filename = Str::ulid()->toBase32() . '.webp';
+
+            // 2. Proses Konversi (Jika imageService butuh file, tetap teruskan)
+            $compressed = $this->imageService->convertToWebP($uploadedFile);
+
+            // 3. Simpan via Storage Disk 'public'
+            $targetDir = 'upload/sparepart_deposit';
+            $targetPath = $targetDir . '/' . $filename;
+
+            // Put file ke storage/app/public/upload/sparepart_deposit/
+            Storage::disk('public')->put($targetPath, (string) $compressed);
+
+            // 4. Simpan ke Database
             ServiceImage::create([
-                'image' => $filePath,
+                'image'                    => $filename,
                 'cs_service_spareparts_id' => $cs_sparepart->id,
             ]);
+
+            // 5. Hapus file temporary Filament
+            Storage::disk('public')->delete($filePath);
         }
-        // if (!empty($services_imgs)) {
-        //     foreach ($services_imgs as $img) {
-
-        //     }
-        // }
-
-
-
-
         return $cs_sparepart;
     }
 
@@ -99,8 +135,8 @@ class CreateCounterServiceDeposit extends CreateRecord
     //     return Action::make('create')
     //         ->modalHeading('Konfirmasi Pendapatan Counter')
     //         ->modalDescription('
-    //     Laporan akan dikirimkan ke bagian Kasir untuk dilakukan pengecekan. 
-    //     Notifikasi laporan diterima atau ditolak akan segera kamu dapatkan. 
+    //     Laporan akan dikirimkan ke bagian Kasir untuk dilakukan pengecekan.
+    //     Notifikasi laporan diterima atau ditolak akan segera kamu dapatkan.
     //     Terima kasih.
     // ')
     //         ->label('Create')
@@ -127,7 +163,7 @@ class CreateCounterServiceDeposit extends CreateRecord
     //             'x-on:file-upload-error.window' => 'uploading = false',
     //             'x-bind:disabled' => 'uploading',
     //         ]);
-    // }    
+    // }
     // protected function getFormActions(): array
     // {
     //     return [];

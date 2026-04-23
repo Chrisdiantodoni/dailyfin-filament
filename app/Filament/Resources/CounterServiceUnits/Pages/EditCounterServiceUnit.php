@@ -6,15 +6,26 @@ use App\Filament\Resources\CounterServiceUnits\CounterServiceUnitResource;
 use App\Models\ApprovalCsCashiersUnit;
 use App\Models\CsUnit;
 use App\Models\UnitNominalDtl;
+use App\Services\ImageCompressionService;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class EditCounterServiceUnit extends EditRecord
 {
     protected static string $resource = CounterServiceUnitResource::class;
+
+    protected $imageService;
+
+    public function boot(ImageCompressionService $imageService)
+    {
+        $this->imageService = $imageService;
+    }
     public function getBreadcrumbs(): array
     {
         return [
@@ -85,18 +96,69 @@ class EditCounterServiceUnit extends EditRecord
         $approval_data->description = 'Counter Melakukan Revisi dan Mengajukan Kembali Kepada Kasir';
         $approval_data->status = 'request';
         $approval_data->save();
-        // Replace gambar lama
-        if (!empty($data['unit_images_upload'])) {
-            // hapus gambar lama
-            $record->unit_images()->delete();
 
-            // simpan gambar baru
-            foreach ($data['unit_images_upload'] as $file) {
+        $formImages = $data['unit_images_upload'] ?? [];
+
+        // --- A. HAPUS GAMBAR LAMA YANG DIBUANG USER ---
+        // Kita ambil semua gambar di DB, lalu cek apakah path lengkapnya masih ada di form
+        $record->unit_images->each(function ($oldImage) use ($formImages) {
+            $fullPathInForm = '/upload/unit_deposit/' . $oldImage->image;
+
+            if (!in_array($fullPathInForm, $formImages)) {
+                // Hapus fisik & record jika sudah tidak ada di form
+                Storage::disk('public')->delete('upload/unit_deposit/' . $oldImage->image);
+                $oldImage->delete();
+            }
+        });
+
+        // --- B. PROSES GAMBAR BARU ---
+        foreach ($formImages as $fileInput) {
+            // Cek: Jika TIDAK diawali '/upload/', berarti ini file baru yang butuh diproses
+            if (!str_starts_with($fileInput, '/upload/')) {
+
+                // Asumsi: fileInput di sini adalah path dari livewire-tmp
+                if (!Storage::disk('public')->exists($fileInput)) {
+                    continue;
+                }
+
+                $absolutePath = Storage::disk('public')->path($fileInput);
+
+                $uploadedFile = new UploadedFile(
+                    $absolutePath,
+                    basename($absolutePath),
+                    mime_content_type($absolutePath),
+                    null,
+                    true
+                );
+
+                // Generate ULID & Konversi ke WebP
+                $filename = Str::ulid()->toBase32() . '.webp';
+                $compressed = $this->imageService->convertToWebP($uploadedFile);
+
+                $targetDir = 'upload/unit_deposit';
+                Storage::disk('public')->put($targetDir . '/' . $filename, (string) $compressed);
+
+                // Simpan ke DB
                 $record->unit_images()->create([
-                    'image' => $file, // path file yang diupload
+                    'image' => $filename,
                 ]);
+
+                // Hapus file temporary
+                Storage::disk('public')->delete($fileInput);
             }
         }
+        // Replace gambar lama
+        // if (!empty($data['unit_images_upload'])) {
+        //     // hapus gambar lama
+        //     $record->unit_images()->delete();
+
+        //     // simpan gambar baru
+        //     foreach ($data['unit_images_upload'] as $file) {
+        //         $record->unit_images()->create([
+        //             'image' => $file, // path file yang diupload
+        //         ]);
+        //     }
+        // }
         return $record->fresh();
     }
     protected function getSavedNotification(): ?\Filament\Notifications\Notification

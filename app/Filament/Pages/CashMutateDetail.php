@@ -9,12 +9,15 @@ use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\RichEditor\RichContentRenderer;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Pages\Page;
 use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
+use Filament\Support\RawJs;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -99,6 +102,24 @@ class CashMutateDetail extends  ViewRecord implements HasTable
             $approval_data->user_id = Auth::user()->id;
             $approval_data->description = $reason;
             $approval_data->status = "reject";
+            $approval_data->cash_mutates_id = $record->id;
+            $approval_data->save();
+
+            DB::commit();
+        } catch (\Throwable $th) {
+            Log::info($th->getMessage());
+        }
+    }
+
+    public function addNeqsDeposit($record, $data)
+    {
+        try {
+            DB::beginTransaction();
+            $record->update($data);
+            $approval_data = new ApprovalMutateCash();
+            $approval_data->user_id = Auth::user()->id;
+            $approval_data->description = "Terdapat Pengisian Setoran NEQ";
+            $approval_data->status = "approve";
             $approval_data->cash_mutates_id = $record->id;
             $approval_data->save();
 
@@ -245,6 +266,34 @@ class CashMutateDetail extends  ViewRecord implements HasTable
                     })
                     ->outlined()
                     ->openUrlInNewTab(),
+                Action::make('neqs_incomes')
+                    ->schema([
+                        Grid::make(2)->schema([
+                            TextInput::make('neq_incomes')
+                                ->mask(RawJs::make('$money($input, \',\', \'.\')'))
+                                ->label('Pendapatan NEQ')
+                                ->live(onBlur: true)
+                                ->extraAttributes([
+                                    'id' => 'income_neq'
+                                ])
+                                ->stripCharacters("."),
+                            TextInput::make('neq_expenses')
+                                ->mask(RawJs::make('$money($input, \',\', \'.\')'))
+                                ->label('Pengeluaran NEQ')
+                                ->live(onBlur: true)
+                                ->extraAttributes([
+                                    'id' => 'neq_expenses'
+                                ])
+                                ->stripCharacters("."),
+                        ]),
+                    ])
+                    ->action(function ($record, array $data) {
+                        $this->addNeqsDeposit($record, $data);
+                    })
+                    ->label('Setoran NEQ')->hidden(fn($record) => $record->status != 'approve')
+                    ->icon('heroicon-o-plus')
+                    ->color('primary'),
+
             ])->extraAttributes([
                 'class' => 'flex gap-2 bg-transparent',
             ])->columnSpanFull(),

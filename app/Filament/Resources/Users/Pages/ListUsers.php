@@ -37,6 +37,8 @@ class ListUsers extends ListRecords
                 'password' =>  'password',
                 'dealer_code' => "9F0004",
                 'is_password_changed' => Carbon::now(),
+                'last_renew_password_at' => Carbon::now(),
+                'force_renew_password' => 1,
                 'status' => 1,
             ]);
             $role = Role::find($data['role']);

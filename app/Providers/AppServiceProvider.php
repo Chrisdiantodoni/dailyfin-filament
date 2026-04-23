@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Filament\Facades\Filament;
 use Filament\Forms\Components\RichEditor;
 use Filament\Notifications\Notification;
 use Filament\Support\Assets\Css;
@@ -27,6 +28,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+
+
         RichEditor::configureUsing(function ($editor) {
             $editor->toolbarButtons([
                 ['bold', 'italic', 'underline', 'strike', 'subscript', 'superscript', 'link'],

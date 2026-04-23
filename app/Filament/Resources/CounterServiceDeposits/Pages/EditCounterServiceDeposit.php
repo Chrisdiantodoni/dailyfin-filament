@@ -7,15 +7,27 @@ use App\Filament\Resources\CounterServiceDeposits\Schemas\CounterServiceDepositF
 use App\Models\ApprovalCsCashier;
 use App\Models\CsServiceSparepart;
 use App\Models\ServiceNominalDtl;
+use App\Services\ImageCompressionService;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class EditCounterServiceDeposit extends EditRecord
 {
+
+
+    protected $imageService;
+
+    public function boot(ImageCompressionService $imageService)
+    {
+        $this->imageService = $imageService;
+    }
     public function getBreadcrumbs(): array
     {
         return [
@@ -85,18 +97,70 @@ class EditCounterServiceDeposit extends EditRecord
         $approval_data->description = 'Counter Melakukan Revisi dan Mengajukan Kembali Kepada Kasir';
         $approval_data->status = 'request';
         $approval_data->save();
-        // Replace gambar lama
-        if (!empty($data['service_images_upload'])) {
-            // hapus gambar lama
-            $record->service_images()->delete();
+        // --- LOGIKA IMAGE SYNC ---
 
-            // simpan gambar baru
-            foreach ($data['service_images_upload'] as $file) {
+        $formImages = $data['service_images_upload'] ?? [];
+
+        // --- A. HAPUS GAMBAR LAMA YANG DIBUANG USER ---
+        // Kita ambil semua gambar di DB, lalu cek apakah path lengkapnya masih ada di form
+        $record->service_images->each(function ($oldImage) use ($formImages) {
+            $fullPathInForm = '/upload/sparepart_deposit/' . $oldImage->image;
+
+            if (!in_array($fullPathInForm, $formImages)) {
+                // Hapus fisik & record jika sudah tidak ada di form
+                Storage::disk('public')->delete('upload/sparepart_deposit/' . $oldImage->image);
+                $oldImage->delete();
+            }
+        });
+
+        // --- B. PROSES GAMBAR BARU ---
+        foreach ($formImages as $fileInput) {
+            // Cek: Jika TIDAK diawali '/upload/', berarti ini file baru yang butuh diproses
+            if (!str_starts_with($fileInput, '/upload/')) {
+
+                // Asumsi: fileInput di sini adalah path dari livewire-tmp
+                if (!Storage::disk('public')->exists($fileInput)) {
+                    continue;
+                }
+
+                $absolutePath = Storage::disk('public')->path($fileInput);
+
+                $uploadedFile = new UploadedFile(
+                    $absolutePath,
+                    basename($absolutePath),
+                    mime_content_type($absolutePath),
+                    null,
+                    true
+                );
+
+                // Generate ULID & Konversi ke WebP
+                $filename = Str::ulid()->toBase32() . '.webp';
+                $compressed = $this->imageService->convertToWebP($uploadedFile);
+
+                $targetDir = 'upload/sparepart_deposit';
+                Storage::disk('public')->put($targetDir . '/' . $filename, (string) $compressed);
+
+                // Simpan ke DB
                 $record->service_images()->create([
-                    'image' => $file, // path file yang diupload
+                    'image' => $filename,
                 ]);
+
+                // Hapus file temporary
+                Storage::disk('public')->delete($fileInput);
             }
         }
+        // // Replace gambar lama
+        // if (!empty($data['service_images_upload'])) {
+        //     // hapus gambar lama
+        //     $record->service_images()->delete();
+
+        //     // simpan gambar baru
+        //     foreach ($data['service_images_upload'] as $file) {
+        //         $record->service_images()->create([
+        //             'image' => $file, // path file yang diupload
+        //         ]);
+        //     }
+        // }
         return $record->fresh();
     }
     protected function getSavedNotification(): ?\Filament\Notifications\Notification

@@ -82,8 +82,6 @@ class Coordinator extends Page implements HasTable
     {
         return $table
             ->query(fn() => CashierDepositMutate::getReportQuery())
-
-
             ->paginated(true)
             ->headerActions([
                 ActionGroup::make([
@@ -136,7 +134,24 @@ class Coordinator extends Page implements HasTable
                                     return $q->whereDate('cashier_deposits.date_published', '<=', $date);
                                 });
                         }
-                    )
+                    ),
+                Filter::make('status')
+                    ->label('Status Workflow')
+                    ->schema([
+                        \Filament\Forms\Components\Select::make('status')
+                            ->options([
+                                'request' => 'Menunggu',
+                                'approve' => 'Disetujui',
+                                'reject'  => 'Ditolak',
+                            ])
+                            ->placeholder('Semua'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        if (! isset($data['status'])) {
+                            return $query;
+                        }
+                        return $query->where('status', $data['status']);
+                    }),
             ])
             ->recordActions([
                 Action::make('View')->icon('heroicon-o-eye')
@@ -154,28 +169,28 @@ class Coordinator extends Page implements HasTable
                     ->date('d M Y'),
 
                 TextColumn::make('dealer_name')
-                    ->label('Nama Dealer'),
+                    ->label('Nama Dealer')->searchable(),
 
                 // Blok Saldo Harian Kasir
                 TextColumn::make('start_balance_cashier')
-                    ->label('Saldo Awal')->label("Saldo Awal Kasir")
+                    ->label('Saldo Awal')->label("Saldo Awal Kasir")->searchable()
                     ->money('idr', true),
-                TextColumn::make('end_balance_cashier')->label("Saldo Akhir Kasir")
+                TextColumn::make('end_balance_cashier')->label("Saldo Akhir Kasir")->searchable()
                     ->label('Saldo Akhir')
                     ->money('idr', true),
-                TextColumn::make('invoice_cashier')->label("Kas Gantung Kasir")
+                TextColumn::make('invoice_cashier')->label("Kas Gantung Kasir")->searchable()
                     ->label('Kas Gantung')
                     ->money('idr', true),
 
 
                 // Blok Saldo GL (mutasi)
-                TextColumn::make('start_balance_mutates')->label("Saldo Awal GL")
+                TextColumn::make('start_balance_mutates')->label("Saldo Awal GL")->searchable()
                     ->label('Saldo Awal')
                     ->money('idr', true),
-                TextColumn::make('end_balance_mutates')->label("Saldo Akhir GL")
+                TextColumn::make('end_balance_mutates')->label("Saldo Akhir GL")->searchable()
                     ->label('Saldo Akhir')
                     ->money('idr', true),
-                TextColumn::make('invoice_mutates')->label("Kas Gantung Kasir")
+                TextColumn::make('invoice_mutates')->label("Kas Gantung Kasir")->searchable()
                     ->label('Kas Gantung')
                     ->money('idr', true),
 

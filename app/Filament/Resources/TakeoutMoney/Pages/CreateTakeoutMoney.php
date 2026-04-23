@@ -5,12 +5,16 @@ namespace App\Filament\Resources\TakeoutMoney\Pages;
 use App\Filament\Resources\TakeoutMoney\TakeoutMoneyResource;
 use App\Models\approval_takeout_money;
 use App\Models\cashier_takeout_money;
+use Carbon\Carbon;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Filament\Support\Exceptions\Halt;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 class CreateTakeoutMoney extends CreateRecord
 {
+
     protected static string $resource = TakeoutMoneyResource::class;
 
     public function getBreadcrumbs(): array
@@ -24,6 +28,24 @@ class CreateTakeoutMoney extends CreateRecord
     protected static bool $canCreateAnother = false;
 
     protected static ?string $title = "Keluar Uang Brankas";
+
+    public function beforeCreate(): void
+    {
+        $data = $this->data;
+        $dealer_code = $data['dealer_code'];
+        $lastSubmission = cashier_takeout_money::where('dealer_code', $dealer_code)->latest()->first();
+        if ($lastSubmission) {
+            $date_published = Carbon::parse($lastSubmission->date_published);
+            if ($date_published->isToday()) {
+                Notification::make()
+                    ->title('Gagal Menyimpan')
+                    ->body('Keluar uang brankas sudah tersubmit sebelumnya')
+                    ->danger()
+                    ->send();
+                throw new Halt();
+            }
+        }
+    }
 
 
     protected function handleRecordCreation(array $data): Model

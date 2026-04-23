@@ -34,7 +34,22 @@ class CreateCashMutate extends CreateRecord
 
     public function beforeCreate(): void
     {
+
         $data = $this->data;
+
+        $dealer_code = $data['dealer_code'];
+        $lastSubmission = CashMutate::where('dealer_code', $dealer_code)->latest()->first();
+        if ($lastSubmission) {
+            $date_published = Carbon::parse($lastSubmission->date_published);
+            if ($date_published->isToday()) {
+                Notification::make()
+                    ->title('Gagal Menyimpan')
+                    ->body('Mutasi kas sudah tersubmit sebelumnya')
+                    ->danger()
+                    ->send();
+                throw new Halt();
+            }
+        }
         $physical_cash   = (int) str_replace('.', '', $data['physical_cash'] ?? 0);
         $total_cash = (int) str_replace('.', '', $data['total_cash'] ?? 0);
 

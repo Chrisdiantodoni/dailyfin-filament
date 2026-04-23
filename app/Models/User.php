@@ -17,10 +17,12 @@ use Illuminate\Support\Facades\DB;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Traits\HasPermissions;
 use Illuminate\Contracts\Auth\Access\Authorizable as AuthorizableContract;
+use Yebor974\Filament\RenewPassword\Contracts\RenewPasswordContract;
+use Yebor974\Filament\RenewPassword\Traits\RenewPassword;
 
-class User extends Authenticatable implements AuthorizableContract
+class User extends Authenticatable implements AuthorizableContract, RenewPasswordContract
 {
-    use HasFactory, HasUuids, HasRoles, HasPermissions, Notifiable, Authorizable, HasApiTokens;
+    use HasFactory, HasUuids, HasRoles, HasPermissions, Notifiable, Authorizable, HasApiTokens, RenewPassword;
     public function getRouteKeyName(): string
     {
         // Default tetap pakai uuid

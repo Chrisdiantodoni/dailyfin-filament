@@ -64,13 +64,14 @@ if (! function_exists('isLateValidateDeposit')) {
      * @param string|\DateTimeInterface $createdAt      Waktu input sebenarnya
      * @return bool
      */
-    function isLateValidateDeposit($datePublished, $createdAt): bool
+    function isLateValidateDeposit($created_at, $datePublished): bool
     {
         $publishedDate = Carbon::parse($datePublished);
-        $createdAt = Carbon::parse($createdAt);
+        $createdAt = Carbon::parse($created_at);
 
         // Deadline = H+1 jam 14:00
         $deadline = $publishedDate->copy()->addDay()->setTime(12, 0);
+        // dd($deadline);
 
         return $createdAt->greaterThan($deadline);
     }

@@ -98,6 +98,24 @@ class CashMutatesTable
 
                         return $isLate ? 'danger' : 'success';
                     }),
+                TextColumn::make('deadline_approval')
+                    ->label('Status Deadline Approval')
+                    ->getStateUsing(fn($record) => $record->status_deadline)
+                    ->formatStateUsing(function ($record) {
+                        return $record->status_deadline == "Late"
+                            ? 'Late'
+                            : 'On-time';
+                    })
+                    ->icon(function ($record) {
+                        return $record->status_deadline == "Late"
+                            ? 'heroicon-o-clock'
+                            : 'heroicon-o-check-badge';
+                    })
+                    ->color(function ($record) {
+                        return $record->status_deadline == "Late"
+                            ?  'danger'
+                            : 'success';
+                    })
             ])
             ->filters([
                 Filter::make('date_range')

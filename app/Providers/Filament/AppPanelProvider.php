@@ -7,6 +7,12 @@ use App\Filament\Resources\CashierDeposits\CashierDepositResource;
 use App\Filament\Resources\CounterServiceDeposits\CounterServiceDepositResource;
 use App\Filament\Resources\CounterServiceUnits\CounterServiceUnitResource;
 use App\Filament\Resources\Users\UsersResource;
+use App\Http\Middleware\PasswordResetChecker;
+use App\Http\Middleware\PreventCashierDeposit;
+use App\Http\Middleware\PreventCashMutates;
+use App\Http\Middleware\PreventRequestsDuringMaintenance;
+use App\Http\Middleware\PreventTakeoutMoney;
+use App\Livewire\PasswordResetModal;
 use App\Models\CashierDeposit;
 use App\Models\CsServiceSparepart;
 use Filament\Http\Middleware\Authenticate;
@@ -30,6 +36,8 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Yebor974\Filament\RenewPassword\RenewPasswordPlugin;
+
 use function Filament\Support\original_request;
 
 class AppPanelProvider extends PanelProvider
@@ -51,7 +59,7 @@ class AppPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
-                Dashboard::class,
+                // Dashboard::class,
             ])
             ->viteTheme('resources/css/filament/app/theme.css')
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
@@ -71,6 +79,12 @@ class AppPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                // PasswordResetChecker::class,
+                // PreventCashierDeposit::class,
+                // PreventCashMutates::class,
+                // PreventRequestsDuringMaintenance::class,
+                // PreventTakeoutMoney::class,
+
             ])
             ->navigationGroups([])
             ->authMiddleware([
@@ -111,7 +125,11 @@ class AppPanelProvider extends PanelProvider
                 'panels::body.end',
                 fn(): string => Blade::render('@vite([\'resources/js/bootstrap.js\'])'),
             )
-
+            ->plugin(
+                RenewPasswordPlugin::make()
+                    ->forceRenewPassword()
+                    ->timestampColumn('is_password_changed')
+            )
             ->globalSearch(false);
     }
 }

@@ -269,23 +269,21 @@ class CashierDepositForm
                         FileUpload::make('cashier_images')
                             ->label('Upload Bukti Setoran (Optional)')
                             ->disk('public')
-                            ->image()          // cuma gambar
-                            ->multiple()       // bisa upload banyak
-                            ->directory('upload/deposit_box')
+                            ->image()
+                            ->multiple()
                             ->panelLayout('grid')
-                            ->reactive()
+                            // Jika tujuannya ingin menyimpan path lengkap agar bisa diakses:
+                            ->mutateDehydratedStateUsing(function ($state) {
+                                if (!$state) return [];
+                                // Pastikan menyimpan path lengkap relatif terhadap disk 'public'
+                                return collect($state)->values()->toArray();
+                            })
                             ->extraInputAttributes([
                                 "x-on:livewire-upload-start" => "\$dispatch('file-upload-started')",
                                 "x-on:livewire-upload-finish" => "\$dispatch('file-upload-finished')",
                                 "x-on:livewire-upload-error" => "\$dispatch('file-upload-error')",
+                            ]),
 
-                            ])
-                            ->helperText('Upload Apabila Transfer')
-                            ->live()
-                            ->mutateDehydratedStateUsing(
-                                fn($state) =>
-                                collect($state)->map(fn($path) => basename($path))->toArray()
-                            ),
                     ])->columnSpanFull(),
                 Grid::make([
                     'default' => 3,

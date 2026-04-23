@@ -18,6 +18,7 @@ use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Html;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
@@ -26,6 +27,7 @@ use Filament\Tables\Table;
 use Illuminate\Console\View\Components\BulletList;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\HtmlString;
 use Tiptap\Nodes\BulletList as NodesBulletList;
 use Tiptap\Nodes\OrderedList;
 use Tiptap\Nodes\Table as NodesTable;
@@ -134,12 +136,21 @@ class CashMutateForm
                         TextInput::make('invoice_nominal')
                             ->mask(RawJs::make('$money($input, \',\', \'.\')'))
                             ->label('Kasbon Gantung')
-                            ->live(onBlur: true)
-
+                            ->live()
+                            ->reactive()
+                            ->stripCharacters(".")
                             ->extraAttributes([
                                 'id' => 'end_balance'
                             ])
-                            ->stripCharacters("."),
+                            ->helperText(function ($state) {
+                                $numeric = (int) str_replace('.', '', $state);
+                                if ($numeric > 0) {
+                                    return new HtmlString(
+                                        '<span style="color: #e53935;"> ⚠️ Nominal dan Rincian Bon Gantung Wajib diisi di Keterangan</span>'
+                                    );
+                                }
+                                return null;
+                            }),
                         TextInput::make('physical_cash')
                             ->mask(RawJs::make('$money($input, \',\', \'.\')'))
                             ->label('Fisik Kas')

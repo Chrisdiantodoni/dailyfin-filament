@@ -33,7 +33,8 @@ class UsersForm
     {
         $users = User::findOrFail($record->id);
         $users->update([
-            'is_password_changed' => Carbon::now(),
+            'last_renew_password_at' => Carbon::now(),
+            'force_renew_password' => 1,
             'password' => 'password'
         ]);
         Notification::make()->title('Password di reset')
