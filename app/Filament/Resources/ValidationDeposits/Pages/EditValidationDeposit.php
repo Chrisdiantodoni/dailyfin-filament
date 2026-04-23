@@ -5,15 +5,25 @@ namespace App\Filament\Resources\ValidationDeposits\Pages;
 use App\Filament\Resources\ValidationDeposits\ValidationDepositResource;
 use App\Models\ApprovalValidation;
 use App\Models\ValidationDeposit;
+use App\Services\ImageCompressionService;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class EditValidationDeposit extends EditRecord
 {
     protected static string $resource = ValidationDepositResource::class;
+    protected $imageService;
+
+    public function boot(ImageCompressionService $imageService)
+    {
+        $this->imageService = $imageService;
+    }
 
     public function getBreadcrumbs(): array
     {
@@ -42,10 +52,10 @@ class EditValidationDeposit extends EditRecord
     {
         $record->update(
             [
-                'customer_name' => $data['customer_name'],
-                'nominal_deposit' => $data['nominal_deposit'],
+                'customer_name' => $data['customer_name'] ?? "",
+                'nominal_deposit' => $data['nominal_deposit'] ?? 0,
                 'date_published' => $data['date_published'],
-                'bank_name' => $data['bank_name'],
+                'bank_name' => $data['bank_name'] ?? "",
                 'dealer_code' => $data['dealer_code'],
                 'transaction_type' => $data['transaction_type'],
                 'status' => isCoordinator() ? "approve" : 'request',
@@ -61,18 +71,68 @@ class EditValidationDeposit extends EditRecord
         $approval_validation->user_id = Auth::user()->id;
         $approval_validation->status = isCoordinator() ? "approve" : "request";
         $approval_validation->save();
-        if (!empty($data['validate_images'])) {
-            // hapus gambar lama
-            $record->validate_imgs()->delete();
+        // if (!empty($data['validate_images'])) {
+        //     // hapus gambar lama
+        //     $record->validate_imgs()->delete();
 
-            // simpan gambar baru
-            foreach ($data['validate_images'] as $file) {
+        //     // simpan gambar baru
+        //     foreach ($data['validate_images'] as $file) {
+        //         $record->validate_imgs()->create([
+        //             'image' => $file, // path file yang diupload
+        //         ]);
+        //     }
+        // }
+
+        $formImages = $data['validate_images'] ?? [];
+
+        // --- A. HAPUS GAMBAR LAMA YANG DIBUANG USER ---
+        // Kita ambil semua gambar di DB, lalu cek apakah path lengkapnya masih ada di form
+        $record->validate_imgs->each(function ($oldImage) use ($formImages) {
+            $fullPathInForm = '/upload/validate/' . $oldImage->image;
+
+            if (!in_array($fullPathInForm, $formImages)) {
+                // Hapus fisik & record jika sudah tidak ada di form
+                Storage::disk('public')->delete('upload/validate/' . $oldImage->image);
+                $oldImage->delete();
+            }
+        });
+
+        // --- B. PROSES GAMBAR BARU ---
+        foreach ($formImages as $fileInput) {
+            // Cek: Jika TIDAK diawali '/upload/', berarti ini file baru yang butuh diproses
+            if (!str_starts_with($fileInput, '/upload/')) {
+
+                // Asumsi: fileInput di sini adalah path dari livewire-tmp
+                if (!Storage::disk('public')->exists($fileInput)) {
+                    continue;
+                }
+
+                $absolutePath = Storage::disk('public')->path($fileInput);
+
+                $uploadedFile = new UploadedFile(
+                    $absolutePath,
+                    basename($absolutePath),
+                    mime_content_type($absolutePath),
+                    null,
+                    true
+                );
+
+                // Generate ULID & Konversi ke WebP
+                $filename = Str::ulid()->toBase32() . '.webp';
+                $compressed = $this->imageService->convertToWebP($uploadedFile);
+
+                $targetDir = 'upload/validate';
+                Storage::disk('public')->put($targetDir . '/' . $filename, (string) $compressed);
+
+                // Simpan ke DB
                 $record->validate_imgs()->create([
-                    'image' => $file, // path file yang diupload
+                    'image' => $filename,
                 ]);
+
+                // Hapus file temporary
+                Storage::disk('public')->delete($fileInput);
             }
         }
-
 
         return $record;
     }

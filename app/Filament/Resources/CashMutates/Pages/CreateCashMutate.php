@@ -6,16 +6,27 @@ use App\Filament\Resources\CashMutates\CashMutateResource;
 use App\Models\ApprovalMutateCash;
 use App\Models\CashImages;
 use App\Models\CashMutate;
+use App\Services\ImageCompressionService;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Support\Exceptions\Halt;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class CreateCashMutate extends CreateRecord
 {
     protected static string $resource = CashMutateResource::class;
+
+    protected $imageService;
+
+    public function boot(ImageCompressionService $imageService)
+    {
+        $this->imageService = $imageService;
+    }
 
     public function getBreadcrumbs(): array
     {
@@ -79,7 +90,7 @@ class CreateCashMutate extends CreateRecord
     protected function handleRecordCreation(array $data): Model
     {
         $cash_mutate = CashMutate::create([
-            'start_balance' => $data['start_balance'],
+            'start_balance' => $data['start_balance'] ?? 0,
             'end_balance' => $data['end_balance'] ?? 0,
             'cash_difference' => $data['start_balance'] ?? 0 - $data['end_balance'] ?? 0,
             'invoice_nominal' => $data['invoice_nominal'] ?? 0,
@@ -129,13 +140,53 @@ class CreateCashMutate extends CreateRecord
         $approval_data->cash_mutates_id = $cash_mutate->id;
         $approval_data->save();
 
-        foreach ($data['cash_images'] as $filePath) {
-            CashImages::create([
-                'image' => $filePath,
-                'cash_mutates_id' => $cash_mutate->id,
 
+        foreach ($data['cash_images'] ?? [] as $filePath) {
+            if (!Storage::disk('public')->exists($filePath)) {
+                continue;
+            }
+
+            $absolutePath = Storage::disk('public')->path($filePath);
+
+            $uploadedFile = new UploadedFile(
+                $absolutePath,
+                basename($absolutePath),
+                mime_content_type($absolutePath),
+                null,
+                true
+            );
+
+            // 1. Generate Nama File menggunakan ULID
+            // Hasilnya: 01H6XCPN8... .webp
+            $filename = Str::ulid()->toBase32() . '.webp';
+
+            // 2. Proses Konversi (Jika imageService butuh file, tetap teruskan)
+            $compressed = $this->imageService->convertToWebP($uploadedFile);
+
+            // 3. Simpan via Storage Disk 'public'
+            $targetDir = 'upload/cash_mutates';
+            $targetPath = $targetDir . '/' . $filename;
+
+            // Put file ke storage/app/public/upload/sparepart_deposit/
+            Storage::disk('public')->put($targetPath, (string) $compressed);
+
+            // 4. Simpan ke Database
+            CashImages::create([
+                'image'                    => $filename,
+                'cash_mutates_id' => $cash_mutate->id,
             ]);
+
+            // 5. Hapus file temporary Filament
+            Storage::disk('public')->delete($filePath);
         }
+
+        // foreach ($data['cash_images'] as $filePath) {
+        //     CashImages::create([
+        //         'image' => $filePath,
+        //         'cash_mutates_id' => $cash_mutate->id,
+
+        //     ]);
+        // }
         return $cash_mutate;
     }
     protected function getRedirectUrl(): string

@@ -189,25 +189,42 @@ class CashMutateForm
                             ->stripCharacters(".")
                             ->reactive(),
                         FileUpload::make('cash_images')
-                            ->label('Upload Foto Fisik Kas')
+                            ->label('Upload Bukti Fisik Kas')
                             ->disk('public')
-                            ->image()          // cuma gambar
-                            ->multiple()       // bisa upload banyak
-                            ->directory('upload/cash_mutates')
+                            ->image()
+                            ->multiple()
                             ->panelLayout('grid')
-                            ->reactive()
+                            // Jika tujuannya ingin menyimpan path lengkap agar bisa diakses:
+                            ->mutateDehydratedStateUsing(function ($state) {
+                                if (!$state) return [];
+                                // Pastikan menyimpan path lengkap relatif terhadap disk 'public'
+                                return collect($state)->values()->toArray();
+                            })->required()
                             ->extraInputAttributes([
                                 "x-on:livewire-upload-start" => "\$dispatch('file-upload-started')",
                                 "x-on:livewire-upload-finish" => "\$dispatch('file-upload-finished')",
                                 "x-on:livewire-upload-error" => "\$dispatch('file-upload-error')",
+                            ]),
+                        // FileUpload::make('cash_images')
+                        //     ->label('Upload Foto Fisik Kas')
+                        //     ->disk('public')
+                        //     ->image()          // cuma gambar
+                        //     ->multiple()       // bisa upload banyak
+                        //     ->directory('upload/cash_mutates')
+                        //     ->panelLayout('grid')
+                        //     ->reactive()
+                        //     ->extraInputAttributes([
+                        //         "x-on:livewire-upload-start" => "\$dispatch('file-upload-started')",
+                        //         "x-on:livewire-upload-finish" => "\$dispatch('file-upload-finished')",
+                        //         "x-on:livewire-upload-error" => "\$dispatch('file-upload-error')",
 
-                            ])
-                            ->required()
-                            ->live()
-                            ->mutateDehydratedStateUsing(
-                                fn($state) =>
-                                collect($state)->map(fn($path) => basename($path))->toArray()
-                            ),
+                        //     ])
+                        //     ->required()
+                        //     ->live()
+                        //     ->mutateDehydratedStateUsing(
+                        //         fn($state) =>
+                        //         collect($state)->map(fn($path) => basename($path))->toArray()
+                        //     ),
                     ])->columnSpanFull(),
                 Grid::make([
                     'default' => 2,
