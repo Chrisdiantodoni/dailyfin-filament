@@ -53,21 +53,22 @@ class Coordinator extends Page implements HasTable
     public function store($record)
     {
 
-        $coordinator = ModelsCoordinator::updateOrCreate(
+        $coordinator = ModelsCoordinator::firstOrCreate(
             [
-                'dealer_code' => $record->dealer_code,
+                'dealer_code'    => $record->dealer_code,
                 'date_published' => $record->date_published,
             ],
             [
-                'start_balance_cashier' => $record->start_balance_cashier,
-                'end_balance_cashier' => $record->end_balance_cashier,
-                'invoice_cashier' => $record->invoice_cashier,
-                'start_balance_mutates' => $record->start_balance_mutates,
-                'end_balance_mutates' => $record->end_balance_mutates,
-                'invoice_mutates' => $record->invoice_mutates,
-                'status' => 'request',
+                'start_balance_cashier' => $record->start_balance_cashier ?? 0,
+                'end_balance_cashier'   => $record->end_balance_cashier ?? 0,
+                'invoice_cashier'       => $record->invoice_cashier ?? 0,
+                'start_balance_mutates' => $record->start_balance_mutates ?? 0,
+                'end_balance_mutates'   => $record->end_balance_mutates ?? 0,
+                'invoice_mutates'       => $record->invoice_mutates ?? 0,
+                'status'                => 'request',
             ]
         );
+
         $url = CoordinatorDetail::getUrl(['id' => $coordinator->id]);
         return redirect()->to($url);
     }
@@ -81,7 +82,15 @@ class Coordinator extends Page implements HasTable
     public function table(Table $table): Table
     {
         return $table
-            ->query(fn() => CashierDepositMutate::getReportQuery())
+            ->query(function () {
+                $filters = $this->getTableFilterState('date_range');
+
+                // Oper start_date dan end_date ke static method di Model
+                return CashierDepositMutate::getReportQuery(
+                    $filters['start_date'] ?? null,
+                    $filters['end_date'] ?? null
+                );
+            })
             ->paginated(true)
             ->headerActions([
                 ActionGroup::make([
@@ -214,7 +223,9 @@ class Coordinator extends Page implements HasTable
 
                     ->getStateUsing(fn($record) => $record->invoice_cashier - $record->invoice_mutates)
                     ->money('idr', true),
-                TextColumn::make('status')->getStateUsing(fn($record) => $record->state == "" ? "request" : $record->state)
+                TextColumn::make('coordinator_status') // ✅ matches alias, not relationship dot notation
+                    ->label('Status')
+                    ->getStateUsing(fn($record) => $record->coordinator_status ?: 'request') // ✅ fixed: state → coordinator_status
                     ->label('Status')
                     ->formatStateUsing(fn(string $state): string => match ($state) {
                         'request' => 'Menunggu',

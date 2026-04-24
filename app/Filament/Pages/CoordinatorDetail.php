@@ -56,17 +56,36 @@ class CoordinatorDetail extends Page implements HasTable
     {
         try {
             DB::beginTransaction();
-            $Coordinator = CoordinatorModel::findOrFail($record->id);
-            $Coordinator->update([
+
+            $coordinator = CoordinatorModel::findOrFail($this->record->id); // ✅ pakai $this->record->id, bukan $record->id
+            $coordinator->update([
                 'status' => 'approve'
             ]);
+
             $approval_coordinator = new CoordinatorCheck();
-            $approval_coordinator->coodinators_id = $record->id;
+            $approval_coordinator->coodinators_id = $this->record->id;
             $approval_coordinator->user_id = Auth::user()->id;
             $approval_coordinator->save();
+
             DB::commit();
+
+            // ✅ Refresh $this->record supaya infolist ikut update
+            $this->record = $coordinator->fresh();
+            $this->infolist->record($this->record);
+
+
+
+            // ✅ Refresh halaman Livewire
+            $this->dispatch('$refresh');
         } catch (\Throwable $th) {
-            Log::info($th->getMessage());
+            DB::rollBack(); // ✅ jangan lupa rollback kalau error
+            Log::error($th->getMessage());
+
+            \Filament\Notifications\Notification::make()
+                ->title('Gagal mengkonfirmasi')
+                ->body($th->getMessage())
+                ->danger()
+                ->send();
         }
     }
 
