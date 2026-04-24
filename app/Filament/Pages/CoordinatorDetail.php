@@ -135,7 +135,7 @@ class CoordinatorDetail extends Page implements HasTable
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         // Logic untuk konfirmasi
-                        $this->approve($this->record);
+                        $this->approve($record);
                     })
                     ->hidden(fn($record) => $this->record?->status != 'request' && (getRole() != 'IT' || getRole() != 'Finance Operation')),
 

@@ -142,16 +142,18 @@ class Coordinator extends Page implements HasTable
                             ->options([
                                 'request' => 'Menunggu',
                                 'approve' => 'Disetujui',
-                                'reject'  => 'Ditolak',
                             ])
                             ->placeholder('Semua'),
                     ])
-                    ->query(function ($query, array $data) {
-                        if (! isset($data['status'])) {
-                            return $query;
+                    ->query(
+                        function ($query, array $data) {
+                            // FILTERING DILAKUKAN DI SINI
+                            return $query
+                                ->when($data['status'], function ($q, $status) {
+                                    return $q->where('coordinators.status', $status);
+                                });
                         }
-                        return $query->where('status', $data['status']);
-                    }),
+                    ),
             ])
             ->recordActions([
                 Action::make('View')->icon('heroicon-o-eye')

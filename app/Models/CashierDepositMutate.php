@@ -18,7 +18,7 @@ class CashierDepositMutate extends Model
     // Kalau id di table bukan auto increment, set:
     public $incrementing = true;
     protected $keyType = 'string';
-    public  static function getReportQuery(?string $startDate = null, ?string $endDate = null)
+    public  static function getReportQuery(?string $startDate = null, ?string $endDate = null, ?string $status = null)
     {
         $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
 
@@ -57,12 +57,21 @@ class CashierDepositMutate extends Model
                     ->groupBy('dealer_code', 'date_published');
             })
             ->whereIn('cashier_deposits.dealer_code', $dealerCodes)
+            ->whereIn('cashier_deposits.id', function ($query) {
+                $query->select(DB::raw('MAX(id)'))
+                    ->from('cashier_deposits')
+                    ->groupBy('cashier_deposits.dealer_code', 'cashier_deposits.date_published'); // Tambahkan prefix tabel
+            })
             ->orderBy('cashier_deposits.created_at', 'desc')
             ->orderBy('cash_mutates.created_at', 'desc');
 
         // Apply range kalau dikasih
         if ($startDate && $endDate) {
             $query->whereBetween('cashier_deposits.date_published', [$startDate, $endDate]);
+        }
+
+        if ($status) {
+            $query->where('coordinators.status', $status);
         }
 
         return $query;
