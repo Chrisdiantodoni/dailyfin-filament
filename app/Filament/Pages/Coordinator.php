@@ -130,8 +130,15 @@ class Coordinator extends Page implements HasTable
             ->filters([
                 Filter::make('date_range')
                     ->schema([
-                        DatePicker::make('start_date')->label('Dari Tanggal'),
-                        DatePicker::make('end_date')->label('Sampai Tanggal'),
+                        DatePicker::make('start_date')
+                            ->label('Dari Tanggal')
+                            // Default: 1 bulan yang lalu
+                            ->default(now()->subMonth()->format('Y-m-d')),
+
+                        DatePicker::make('end_date')
+                            ->label('Sampai Tanggal')
+                            // Default: Hari ini
+                            ->default(now()->format('Y-m-d')),
                     ])->query(
                         function ($query, array $data) {
                             // FILTERING DILAKUKAN DI SINI
@@ -143,7 +150,17 @@ class Coordinator extends Page implements HasTable
                                     return $q->whereDate('cashier_deposits.date_published', '<=', $date);
                                 });
                         }
-                    ),
+                    )
+                    ->indicateUsing(function (array $data): array {
+                        $indicators = [];
+                        if ($data['start_date'] ?? null) {
+                            $indicators['start_date'] = 'Dari: ' . \Carbon\Carbon::parse($data['start_date'])->toFormattedDateString();
+                        }
+                        if ($data['end_date'] ?? null) {
+                            $indicators['end_date'] = 'Sampai: ' . \Carbon\Carbon::parse($data['end_date'])->toFormattedDateString();
+                        }
+                        return $indicators;
+                    }),
                 Filter::make('status')
                     ->label('Status Workflow')
                     ->schema([

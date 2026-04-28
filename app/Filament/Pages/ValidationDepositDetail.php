@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Filament\Resources\ValidationDeposits\ValidationDepositResource;
 use App\Models\ApprovalValidation;
 use App\Models\ValidationProofImage;
+use App\Services\ImageCompressionService;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
@@ -32,6 +33,13 @@ class ValidationDepositDetail extends ViewRecord implements HasTable
     protected static string $resource = ValidationDepositResource::class;
     protected string $view = 'filament.pages.validation-deposit';
     protected static bool $shouldRegisterNavigation = false;
+
+    protected $imageService;
+
+    public function boot(ImageCompressionService $imageService)
+    {
+        $this->imageService = $imageService;
+    }
     protected function getHeaderActions(): array
     {
         return [
@@ -184,31 +192,56 @@ class ValidationDepositDetail extends ViewRecord implements HasTable
 
             Actions::make([
                 Action::make('confirm')->schema([
-                    FileUpload::make('proof_imgs')
-                        ->label('Upload Bukti Pengecekan')
-                        ->disk('public')
-                        ->image()          // cuma gambar
-                        ->multiple()       // bisa upload banyak
-                        ->panelLayout('grid')
-                        ->reactive()
-                        ->extraInputAttributes([
-                            "x-on:livewire-upload-start" => "\$dispatch('file-upload-started')",
-                            "x-on:livewire-upload-finish" => "\$dispatch('file-upload-finished')",
-                            "x-on:livewire-upload-error" => "\$dispatch('file-upload-error')",
 
-                        ])
+
+                    FileUpload::make('proof_imgs')
+                        ->label('Upload Bukti Pengecekan (Optional)')
+                        ->disk('public')
+                        ->image()
+                        ->multiple()
+                        ->panelLayout('grid')
                         ->required()
                         ->helperText('Upload Apabila Transfer')
-                        ->live()
                         ->validationMessages([
                             'required' => 'Bukti pengecekan wajib diupload!',
                             'image'    => 'File harus berupa gambar.',
                         ])
+                        // Jika tujuannya ingin menyimpan path lengkap agar bisa diakses:
                         ->mutateDehydratedStateUsing(function ($state) {
                             if (!$state) return [];
                             // Pastikan menyimpan path lengkap relatif terhadap disk 'public'
                             return collect($state)->values()->toArray();
                         })
+                        ->extraInputAttributes([
+                            "x-on:livewire-upload-start" => "\$dispatch('file-upload-started')",
+                            "x-on:livewire-upload-finish" => "\$dispatch('file-upload-finished')",
+                            "x-on:livewire-upload-error" => "\$dispatch('file-upload-error')",
+                        ]),
+                    // FileUpload::make('proof_imgs')
+                    //     ->label('Upload Bukti Pengecekan')
+                    //     ->disk('public')
+                    //     ->image()          // cuma gambar
+                    //     ->multiple()       // bisa upload banyak
+                    //     ->panelLayout('grid')
+                    //     ->reactive()
+                    //     ->extraInputAttributes([
+                    //         "x-on:livewire-upload-start" => "\$dispatch('file-upload-started')",
+                    //         "x-on:livewire-upload-finish" => "\$dispatch('file-upload-finished')",
+                    //         "x-on:livewire-upload-error" => "\$dispatch('file-upload-error')",
+
+                    //     ])
+                    //     ->required()
+                    //     ->helperText('Upload Apabila Transfer')
+                    //     ->live()
+                    //     ->validationMessages([
+                    //         'required' => 'Bukti pengecekan wajib diupload!',
+                    //         'image'    => 'File harus berupa gambar.',
+                    //     ])
+                    //     ->mutateDehydratedStateUsing(function ($state) {
+                    //         if (!$state) return [];
+                    //         // Pastikan menyimpan path lengkap relatif terhadap disk 'public'
+                    //         return collect($state)->values()->toArray();
+                    //     })
                 ])
                     ->label("Konfirmasi")
                     ->color('info')
