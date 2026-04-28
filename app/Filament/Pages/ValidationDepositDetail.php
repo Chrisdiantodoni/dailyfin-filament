@@ -19,9 +19,12 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ValidationDepositDetail extends ViewRecord implements HasTable
 {
@@ -59,12 +62,45 @@ class ValidationDepositDetail extends ViewRecord implements HasTable
         try {
             DB::beginTransaction();
             if (!empty($proof_imgs)) {
-                foreach ($proof_imgs as $img) {
+
+                foreach ($proof_imgs ?? [] as $filePath) {
+                    if (!Storage::disk('public')->exists($filePath)) {
+                        continue;
+                    }
+
+                    $absolutePath = Storage::disk('public')->path($filePath);
+
+                    $uploadedFile = new UploadedFile(
+                        $absolutePath,
+                        basename($absolutePath),
+                        mime_content_type($absolutePath),
+                        null,
+                        true
+                    );
+
+                    // 1. Generate Nama File menggunakan ULID
+                    // Hasilnya: 01H6XCPN8... .webp
+                    $filename = Str::ulid()->toBase32() . '.webp';
+
+                    // 2. Proses Konversi (Jika imageService butuh file, tetap teruskan)
+                    $compressed = $this->imageService->convertToWebP($uploadedFile);
+
+                    // 3. Simpan via Storage Disk 'public'
+                    $targetDir = 'upload/validate_proof';
+                    $targetPath = $targetDir . '/' . $filename;
+
+                    // Put file ke storage/app/public/upload/sparepart_deposit/
+                    Storage::disk('public')->put($targetPath, (string) $compressed);
+
+
 
                     ValidationProofImage::insert([
-                        'image' => $img,
+                        'image' => $filename,
                         'validation_deposits_id' => $record->id,
                     ]);
+
+                    // 5. Hapus file temporary Filament
+                    Storage::disk('public')->delete($filePath);
                 }
             }
             $record->update([
@@ -153,7 +189,6 @@ class ValidationDepositDetail extends ViewRecord implements HasTable
                         ->disk('public')
                         ->image()          // cuma gambar
                         ->multiple()       // bisa upload banyak
-                        ->directory('upload/validate_proof')
                         ->panelLayout('grid')
                         ->reactive()
                         ->extraInputAttributes([
@@ -169,10 +204,11 @@ class ValidationDepositDetail extends ViewRecord implements HasTable
                             'required' => 'Bukti pengecekan wajib diupload!',
                             'image'    => 'File harus berupa gambar.',
                         ])
-                        ->mutateDehydratedStateUsing(
-                            fn($state) =>
-                            collect($state)->map(fn($path) => basename($path))->toArray()
-                        ),
+                        ->mutateDehydratedStateUsing(function ($state) {
+                            if (!$state) return [];
+                            // Pastikan menyimpan path lengkap relatif terhadap disk 'public'
+                            return collect($state)->values()->toArray();
+                        })
                 ])
                     ->label("Konfirmasi")
                     ->color('info')
