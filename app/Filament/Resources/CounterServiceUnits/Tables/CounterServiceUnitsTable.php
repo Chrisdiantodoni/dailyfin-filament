@@ -120,7 +120,7 @@ class CounterServiceUnitsTable
                             $indicators['end_date'] = 'Sampai: ' . \Carbon\Carbon::parse($data['end_date'])->toFormattedDateString();
                         }
                         return $indicators;
-                    }),,
+                    }),
                 Filter::make('status')
                     ->label('Status Workflow')
                     ->schema([
