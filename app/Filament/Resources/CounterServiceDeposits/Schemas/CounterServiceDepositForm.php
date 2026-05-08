@@ -119,9 +119,8 @@ class CounterServiceDepositForm
                             $total = $cash - $expense;
                             $set('total_income', number_format($total, 0, ',', '.'));
                         })
-                        ->stripCharacters(".")
+                        ->stripCharacters("."),
 
-                        ->reactive(),
 
                     TextInput::make('total_income')
                         ->mask(RawJs::make('$money($input, \',\', \'.\')'))
