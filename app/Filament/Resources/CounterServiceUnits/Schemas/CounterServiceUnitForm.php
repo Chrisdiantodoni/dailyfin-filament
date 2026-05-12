@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\CounterServiceUnits\Schemas;
 
 use App\Models\DealerUser;
+use App\Support\UserDealerContext;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -10,6 +11,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
@@ -23,6 +25,9 @@ class CounterServiceUnitForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->schema([
+            Section::make('Input Setoran Unit')
+                ->description('Lengkapi data setoran unit, transfer, pengeluaran, dealer, dan keterangan.')
+                ->schema([
             Grid::make([
                 'default' => 1,
                 'sm' => 1,
@@ -110,7 +115,7 @@ class CounterServiceUnitForm
                         ->live(onBlur: true)
                         ->afterStateUpdated(function (Get $get, Set $set, ?string $old, ?string $state) {
                             $expense = (int) Str::replace('.', '', $state) ?: 0;
-                            $cash = (int) Str::replace('.', '', $get('service_nominal_dtls.cash')) ?: 0;
+                            $cash = (int) Str::replace('.', '', $get('unit_nominal_dtl.cash')) ?: 0;
 
                             $total = $cash - $expense;
                             $set('total_income', number_format($total, 0, ',', '.'));
@@ -127,8 +132,8 @@ class CounterServiceUnitForm
 
                     Select::make('dealer_code_single')
                         ->label('Dealer')->dehydrated()
-                        ->default(fn() => Auth::user()->dealer_users->first()->dealers->dealer_name)
-                        ->hidden(fn() => Auth::user()->dealer_users->count() > 1)
+                        ->default(fn() => UserDealerContext::firstDealerName())
+                        ->hidden(fn() => UserDealerContext::hasMultipleDealers())
                         ->disabled(),
                     Select::make('dealer_code')
                         ->required()
@@ -142,7 +147,7 @@ class CounterServiceUnitForm
                         ->preload()
                         ->searchable()
                         ->placeholder('Pilih Dealer')
-                        ->hidden(fn() => Auth::user()->dealer_users->count() === 1)
+                        ->hidden(fn() => UserDealerContext::hasSingleDealer())
                         ->live(),
                 ])->columnSpanFull(),
 
@@ -155,6 +160,8 @@ class CounterServiceUnitForm
 
                 ])->columnSpanFull(),
 
+                ])
+                ->columnSpanFull(),
         ]);
     }
 }

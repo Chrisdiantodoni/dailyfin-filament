@@ -2,7 +2,6 @@
 
 namespace App\Providers\Filament;
 
-use App\Filament\Pages\CoordinatorDetail;
 use App\Filament\Resources\CashierDeposits\CashierDepositResource;
 use App\Filament\Resources\CounterServiceDeposits\CounterServiceDepositResource;
 use App\Filament\Resources\CounterServiceUnits\CounterServiceUnitResource;
@@ -25,15 +24,17 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Icons\Heroicon;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
+use Filament\View\PanelsIconAlias;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Yebor974\Filament\RenewPassword\RenewPasswordPlugin;
 
@@ -50,8 +51,18 @@ class AppPanelProvider extends PanelProvider
             ->id('app')
             ->path('app')
             ->brandName(config('app.name', 'Daily Finance'))
-            ->brandLogo(asset('assets/logo-dashboard.png'))
+            ->brandLogo(new HtmlString(sprintf(
+                '<div class="df-brand-logo"><img src="%s" alt="Logo Daily Finance"><span>Daily Finance</span></div>',
+                asset('assets/logo-dashboard.png'),
+            )))
+            ->brandLogoHeight('2rem')
             ->login()
+            ->icons([
+                PanelsIconAlias::SIDEBAR_EXPAND_BUTTON => Heroicon::OutlinedBars3BottomLeft,
+                PanelsIconAlias::SIDEBAR_EXPAND_BUTTON_RTL => Heroicon::OutlinedBars3BottomLeft,
+                PanelsIconAlias::SIDEBAR_COLLAPSE_BUTTON => Heroicon::OutlinedBars3BottomLeft,
+                PanelsIconAlias::SIDEBAR_COLLAPSE_BUTTON_RTL => Heroicon::OutlinedBars3BottomLeft,
+            ])
             ->colors([
                 'primary' => Color::Amber,
             ])
@@ -86,14 +97,14 @@ class AppPanelProvider extends PanelProvider
 
             ])
             ->navigationGroups([
-                NavigationGroup::make('Counter Service')
-                    ->icon('heroicon-o-wrench-screwdriver')
+                NavigationGroup::make('Setoran ke Kasir')
+                    ->icon('heroicon-o-currency-dollar')
                     ->collapsed(),
-                NavigationGroup::make('Setoran & Validasi')
-                    ->icon('heroicon-o-inbox-arrow-down')
+                NavigationGroup::make('Setoran ke Bank')
+                    ->icon('heroicon-o-building-library')
                     ->collapsed(),
-                NavigationGroup::make('Mutasi & Kas')
-                    ->icon('heroicon-o-banknotes')
+                NavigationGroup::make('Laporan Kas')
+                    ->icon('heroicon-o-clipboard-document-list')
                     ->collapsed(),
                 NavigationGroup::make('Master Data')
                     ->icon('heroicon-o-cog-6-tooth')
@@ -101,11 +112,7 @@ class AppPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ])->routes(function () {
-                // Register any custom routes here. 
-                // The routes will be prefixed with the panel's path, e.g., '/admin/my-custom-route'.
-                Route::get('/coordinator-detail/{id}', CoordinatorDetail::class);
-            })
+            ])
             // ->navigation(function (NavigationBuilder $builder): NavigationBuilder {
             //     return $builder
             //         ->items([

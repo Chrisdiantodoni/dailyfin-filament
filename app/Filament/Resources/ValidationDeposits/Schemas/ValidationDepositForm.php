@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ValidationDeposits\Schemas;
 
 use App\Models\DealerUser;
 use App\Models\Neq;
+use App\Support\UserDealerContext;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\DateTimePicker;
@@ -14,6 +15,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 use Illuminate\Support\Facades\Auth;
@@ -24,6 +26,9 @@ class ValidationDepositForm
     {
         return $schema
             ->components([
+                Section::make('Input Validasi Setoran')
+                    ->description('Lengkapi data penyetor, dealer, transaksi, bukti setoran, dan keterangan.')
+                    ->schema([
                 Grid::make([
                     'default' => 1,
                     'sm' => 1,
@@ -51,14 +56,14 @@ class ValidationDepositForm
                     ->schema([
                         TextInput::make('dealer_display')
                             ->label('Dealer')
-                            ->default(fn() => Auth::user()->dealer_users->first()->dealers->dealer_name)
-                            ->hidden(fn() => Auth::user()->dealer_users->count() > 1)
+                            ->default(fn() => UserDealerContext::firstDealerName())
+                            ->hidden(fn() => UserDealerContext::hasMultipleDealers())
                             ->disabled()
                             ->dehydrated(false),
 
                         // Hidden field untuk simpan dealer_code
                         Hidden::make('dealer_code_single')
-                            ->default(fn() => Auth::user()->dealer_users->first()->dealers->dealer_code)
+                            ->default(fn() => UserDealerContext::firstDealerCode())
                             ->dehydrated(),
                         Select::make('dealer_code')
                             ->required()
@@ -73,7 +78,7 @@ class ValidationDepositForm
                             ->default(null)
                             ->searchable()
                             ->placeholder('Pilih Dealer')
-                            ->hidden(fn() => Auth::user()->dealer_users->count() === 1)
+                            ->hidden(fn() => UserDealerContext::hasSingleDealer())
                             ->live(),
                         Select::make('transaction_type')
                             ->required()->reactive()
@@ -166,6 +171,8 @@ class ValidationDepositForm
                             ->label('Keterangan')->columnSpanFull(),
 
                     ])->columnSpanFull(),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 }

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Dealers\Schemas;
 
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class DealerForm
@@ -12,16 +13,26 @@ class DealerForm
     {
         return $schema
             ->components([
-                TextInput::make('dealer_code')->label("Kode Dealer")
-                    ->unique(ignoreRecord: true)
-                    ->required(),
-                TextInput::make('dealer_name')->label("Nama Dealer")
-                    ->required(),
-                Select::make("area")->required()->options([
-                    "NAD" => "NAD",
-                    "SUMUT" => "SUMUT",
-                    "RIAU" => "RIAU",
-                ])
+                Section::make('Input Dealer')
+                    ->schema([
+                        TextInput::make('dealer_code')->label("Kode Dealer")
+                            ->unique(ignoreRecord: true)
+                            ->required(),
+                        TextInput::make('dealer_name')->label("Nama Dealer")
+                            ->required(),
+                        Select::make("area")->required()->options([
+                            "NAD" => "NAD",
+                            "SUMUT" => "SUMUT",
+                            "RIAU" => "RIAU",
+                        ]),
+                    ])
+                    ->columns([
+                        'default' => 1,
+                        'sm' => 1,
+                        'md' => 2,
+                        'lg' => 3,
+                    ])
+                    ->columnSpanFull(),
             ])->columns([
                 'default' => 1,
                 'sm' => 1,

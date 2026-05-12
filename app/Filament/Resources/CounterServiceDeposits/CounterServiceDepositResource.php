@@ -27,7 +27,7 @@ class CounterServiceDepositResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'CsServiceSparepart';
     protected static ?string $navigationLabel = 'Setoran Sparepart & Jasa';
-    protected static string | UnitEnum | null $navigationGroup = 'Counter Service';
+    protected static string | UnitEnum | null $navigationGroup = 'Setoran ke Kasir';
     public static function canAccess(): bool
     {
         return canAny([
@@ -66,11 +66,7 @@ class CounterServiceDepositResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
-
-
-        $startDate = now()->startOfMonth();
-        $endDate   = now()->endOfMonth();
+        $dealerCodes = Auth::user()->dealer_users()->pluck('dealer_code')->all();
 
         return parent::getEloquentQuery()
             ->with(['users', 'service_nominal_dtls', 'dealers', 'service_images', 'approval_cs_cashiers.user'])

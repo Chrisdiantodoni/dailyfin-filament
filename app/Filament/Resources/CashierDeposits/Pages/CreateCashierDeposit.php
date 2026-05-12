@@ -9,7 +9,6 @@ use App\Models\CashierDeposit;
 use App\Models\CashierDepositImage;
 use App\Services\ImageCompressionService;
 use Carbon\Carbon;
-use Filament\Actions\CreateAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Support\Exceptions\Halt;
@@ -20,14 +19,15 @@ use Illuminate\Support\Facades\Storage;
 
 class CreateCashierDeposit extends CreateRecord
 {
-
     protected $imageService;
 
     public function boot(ImageCompressionService $imageService)
     {
         $this->imageService = $imageService;
     }
+
     protected static string $resource = CashierDepositResource::class;
+
     public function getBreadcrumbs(): array
     {
         return [
@@ -37,7 +37,9 @@ class CreateCashierDeposit extends CreateRecord
     }
 
     protected static bool $canCreateAnother = false;
-    protected static ?string $title = "Setoran Harian Brankas";
+
+    protected static ?string $title = 'Setoran Harian Brankas';
+
     public function beforeCreate(): void
     {
         $data = $this->data;
@@ -51,12 +53,11 @@ class CreateCashierDeposit extends CreateRecord
                 ->body('Keluar Uang Brankas belum disetujui')
                 ->danger()
                 ->send();
-            throw new Halt();
+            throw new Halt;
         }
 
-
         $existingSubmission = CashierDeposit::where('dealer_code', $dealerCodes)
-            ->whereDate('date_published', Carbon::today()) // Cek apakah sudah ada di hari ini
+            ->where('date_published', Carbon::today()->toDateString()) // Cek apakah sudah ada di hari ini
             ->exists(); // Cukup cek keberadaan data, tidak perlu fetch record penuh
 
         if ($existingSubmission) {
@@ -65,9 +66,9 @@ class CreateCashierDeposit extends CreateRecord
                 ->body('Setoran Brankas sudah tersubmit sebelumnya')
                 ->danger()
                 ->send();
-            throw new Halt();
+            throw new Halt;
         }
-        $end_balance   = (int) str_replace('.', '', $data['end_balance'] ?? 0);
+        $end_balance = (int) str_replace('.', '', $data['end_balance'] ?? 0);
         $total_deposit = (int) str_replace('.', '', $data['total_deposit'] ?? 0);
 
         if ($end_balance < 0 || $total_deposit < 0) {
@@ -76,7 +77,7 @@ class CreateCashierDeposit extends CreateRecord
                 ->body('Saldo Akhir dan Total Setoran Brankas tidak boleh dibawah 0.')
                 ->danger()
                 ->send();
-            throw new Halt();
+            throw new Halt;
         }
     }
 
@@ -94,20 +95,20 @@ class CreateCashierDeposit extends CreateRecord
             'bank_name' => $data['bank_name'],
             'end_balance' => $data['end_balance'] ?? 0,
             'total_deposit' => $data['total_deposit'] ?? 0,
-            'status' => isCoordinator()  ? 'approve' : 'request',
+            'status' => isCoordinator() ? 'approve' : 'request',
             'approval_type' => 'FinOps',
             'description' => $data['description'],
         ]);
 
-        $approval_cashier = new ApprovalCashierDeposit();
+        $approval_cashier = new ApprovalCashierDeposit;
         $approval_cashier->cashier_deposit_id = $cashier_deposit->id;
-        $approval_cashier->description = isCoordinator() ? "Coordinator Melaporan Setoran Brankas" : "Kasir Melaporkan Setoran Uang ke Brankas Kepada Finance Ops";
+        $approval_cashier->description = isCoordinator() ? 'Coordinator Melaporan Setoran Brankas' : 'Kasir Melaporkan Setoran Uang ke Brankas Kepada Finance Ops';
         $approval_cashier->user_id = Auth::user()->id;
-        $approval_cashier->status = isCoordinator() ? "approve" : "request";
+        $approval_cashier->status = isCoordinator() ? 'approve' : 'request';
         $approval_cashier->save();
 
         foreach ($data['cashier_images'] ?? [] as $filePath) {
-            if (!Storage::disk('public')->exists($filePath)) {
+            if (! Storage::disk('public')->exists($filePath)) {
                 continue;
             }
 
@@ -123,7 +124,7 @@ class CreateCashierDeposit extends CreateRecord
             );
 
             // 3. Proses Image via Service (Konversi ke WebP)
-            $filename   = $this->imageService->makeUniqueFileName($uploadedFile, 'webp');
+            $filename = $this->imageService->makeUniqueFileName($uploadedFile, 'webp');
             $compressed = $this->imageService->convertToWebP($uploadedFile);
 
             // 4. Pastikan Directory Tujuan Ada
@@ -131,13 +132,13 @@ class CreateCashierDeposit extends CreateRecord
             Storage::disk('public')->makeDirectory($targetDir); // ✅ Auto-create folder jika belum ada
 
             // 5. Simpan file hasil kompresi via Storage (bukan public_path)
-            $targetPath = $targetDir . '/' . $filename;
+            $targetPath = $targetDir.'/'.$filename;
             Storage::disk('public')->put($targetPath, (string) $compressed); // ✅ Tersimpan di storage/app/public/
 
             // 6. Simpan ke Database
             CashierDepositImage::create([
                 'image' => $filename, // ✅ Simpan relative path, bukan hanya filename
-                'cashier_deposit_id' =>  $cashier_deposit->id,
+                'cashier_deposit_id' => $cashier_deposit->id,
             ]);
 
             // 7. Hapus file temporary

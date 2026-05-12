@@ -28,7 +28,7 @@ class TakeoutMoneyResource extends Resource
     protected static ?string $recordTitleAttribute = 'cashier_takeout_money';
     protected static ?int $navigationSort = 3;
     protected static ?string $navigationLabel = 'Keluar Uang Brankas';
-    protected static string | UnitEnum | null $navigationGroup = 'Mutasi & Kas';
+    protected static string | UnitEnum | null $navigationGroup = 'Laporan Kas';
 
     public static function form(Schema $schema): Schema
     {
@@ -64,9 +64,10 @@ class TakeoutMoneyResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = Auth::user()->dealer_users()->pluck('dealer_code')->all();
 
         return parent::getEloquentQuery()
+            ->with(['users', 'dealers'])
             ->whereIn('dealer_code', $dealerCodes)
             ->latest();
     }

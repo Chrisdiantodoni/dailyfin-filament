@@ -4,8 +4,8 @@ namespace App\Filament\Resources\CashierDeposits\Schemas;
 
 use App\Models\CashierDeposit;
 use App\Models\DealerUser;
+use App\Support\UserDealerContext;
 use Carbon\Carbon;
-
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -13,15 +13,13 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
 
 class CashierDepositForm
 {
@@ -31,6 +29,7 @@ class CashierDepositForm
         if ($yesterday->isSunday()) {
             $yesterday = $yesterday->subDay();
         }
+
         return $yesterday;
     }
     // public function getBalance($dealer_code)
@@ -49,33 +48,34 @@ class CashierDepositForm
 
     public function getBalance($dealer_code)
     {
-
         $latest_date = CashierDeposit::where('dealer_code', $dealer_code)
             ->max('date_published');
 
-        // Retrieve the record for the latest date
-        $latest_record_start_balance = CashierDeposit::where('dealer_code', $dealer_code)
-            ->whereDate('date_published', '=', $latest_date)
-            ->where('status', 'approve')
-            ->first();
-        $latest_record = CashierDeposit::where('dealer_code', $dealer_code)
-            ->whereDate('date_published', '=', $latest_date)
-            ->where('status', 'approve')
-            ->get();
-
-        if ($latest_record) {
-            $end_balance = (($latest_record_start_balance->start_balance ?? 0) -
-                $latest_record->sum('expense') -
-                $latest_record->sum('bank_deposit') +
-                $latest_record->sum('today_income'));
-        } else {
-            $end_balance = 0;
+        if (! $latest_date) {
+            return 0;
         }
 
+        $latest_record = CashierDeposit::where('dealer_code', $dealer_code)
+            ->where('date_published', $latest_date)
+            ->where('status', 'approve')
+            ->selectRaw('
+                COUNT(*) as records_count,
+                COALESCE(MAX(start_balance), 0) as start_balance,
+                COALESCE(SUM(expense), 0) as expense_total,
+                COALESCE(SUM(bank_deposit), 0) as bank_deposit_total,
+                COALESCE(SUM(today_income), 0) as today_income_total
+            ')
+            ->first();
 
-        return $end_balance;
+        if (! $latest_record || (int) $latest_record->records_count === 0) {
+            return 0;
+        }
+
+        return (int) $latest_record->start_balance
+            - (int) $latest_record->expense_total
+            - (int) $latest_record->bank_deposit_total
+            + (int) $latest_record->today_income_total;
     }
-
 
     // public function getBalanceCoordinator($dealer_code, $request_date)
     // {
@@ -108,21 +108,23 @@ class CashierDepositForm
     public static function calculateEndBalance($start_balance, $today_income, $expense, $bank_deposit)
     {
         $end_balance = ($start_balance + $today_income) - $expense - $bank_deposit;
+
         return $end_balance;
     }
 
     public static function calculateTotalDeposit($end_balance, $invoice_nominal)
     {
         $total_deposit = $end_balance - $invoice_nominal;
+
         return $total_deposit;
     }
 
     public static function syncBalances($get, $set)
     {
-        $start_balance   = (int) str_replace('.', '', $get('start_balance')) ?: 0;
-        $today_income    = (int) str_replace('.', '', $get('today_income')) ?: 0;
-        $expense         = (int) str_replace('.', '', $get('expense')) ?: 0;
-        $bank_deposit    = (int) str_replace('.', '', $get('bank_deposit')) ?: 0;
+        $start_balance = (int) str_replace('.', '', $get('start_balance')) ?: 0;
+        $today_income = (int) str_replace('.', '', $get('today_income')) ?: 0;
+        $expense = (int) str_replace('.', '', $get('expense')) ?: 0;
+        $bank_deposit = (int) str_replace('.', '', $get('bank_deposit')) ?: 0;
         $invoice_nominal = (int) str_replace('.', '', $get('invoice_nominal')) ?: 0;
 
         $end_balance = self::calculateEndBalance(
@@ -141,32 +143,35 @@ class CashierDepositForm
     {
         return $schema
             ->components([
+                Section::make('Input Setoran Brankas')
+                    ->description('Lengkapi data setoran harian, bukti pendukung, dan keterangan transaksi.')
+                    ->schema([
                 Grid::make([
                     'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
-                    'md' => 1
+                    'md' => 1,
                 ])
                     ->schema([
                         DatePicker::make('date_published')
                             ->label('Tanggal')
                             ->dehydrated()
-                            ->default(fn() => Carbon::now())
+                            ->default(fn () => Carbon::now())
                             ->minDate(getRole() == 'Cashier' ? Carbon::today() : null),
                         TextInput::make('name')
                             ->label('Nama')
-                            ->default(fn() => Auth::user()->name)
+                            ->default(fn () => Auth::user()->name)
                             ->readOnly(),
                         TextInput::make('dealer_display')
                             ->label('Dealer')
-                            ->default(fn() => Auth::user()->dealer_users->first()->dealers->dealer_name)
-                            ->hidden(fn() => Auth::user()->dealer_users->count() > 1)
+                            ->default(fn () => UserDealerContext::firstDealerName())
+                            ->hidden(fn () => UserDealerContext::hasMultipleDealers())
                             ->disabled()
                             ->dehydrated(false),
 
                         // Hidden field untuk simpan dealer_code
                         Hidden::make('dealer_code_single')
-                            ->default(fn() => Auth::user()->dealer_users->first()->dealers->dealer_code)
+                            ->default(fn () => UserDealerContext::firstDealerCode())
                             ->dehydrated(),
                         Select::make('dealer_code')
                             ->required()
@@ -174,14 +179,13 @@ class CashierDepositForm
                             ->relationship(
                                 'dealers',
                                 'dealer_name',
-                                fn($query) =>
-                                $query->whereIn('dealer_code', DealerUser::where('user_id', Auth::id())->pluck('dealer_code'))->limit(5)
+                                fn ($query) => $query->whereIn('dealer_code', DealerUser::where('user_id', Auth::id())->pluck('dealer_code'))->limit(5)
                             )
                             ->preload()
                             ->default(null)
                             ->searchable()
                             ->placeholder('Pilih Dealer')
-                            ->hidden(fn() => Auth::user()->dealer_users->count() === 1)
+                            ->hidden(fn () => UserDealerContext::hasSingleDealer())
                             ->live(),
 
                     ])->columnSpanFull(),
@@ -189,7 +193,7 @@ class CashierDepositForm
                     'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
-                    'md' => 1
+                    'md' => 1,
                 ])
                     ->schema([
                         TextInput::make('start_balance')
@@ -206,7 +210,7 @@ class CashierDepositForm
 
                                         $dates = $get('date_published');
 
-                                        $form = new \App\Filament\Resources\CashierDeposits\Schemas\CashierDepositForm();
+                                        $form = new \App\Filament\Resources\CashierDeposits\Schemas\CashierDepositForm;
                                         if ($dealerCode) {
                                             // if (getRole() == 'Coordinator' || getRole() == 'IT') {
                                             //     $newBalance = $form->getBalanceCoordinator($dealerCode, $dates);
@@ -214,56 +218,57 @@ class CashierDepositForm
                                             //     return;
                                             // }
                                             $newBalance = $form->getBalance($dealerCode);
-                                            $set('start_balance',  number_format($newBalance, 0, ',', '.'));
+                                            $set('start_balance', number_format($newBalance, 0, ',', '.'));
+
                                             return;
                                         }
-                                    })->hidden(fn($operation) => $operation === 'edit')
+                                    })->hidden(fn ($operation) => $operation === 'edit')
                             )->extraAttributes([
-                                'id' => 'start_balance'
+                                'id' => 'start_balance',
                             ])
                             ->live(onBlur: true)
-                            ->stripCharacters(".")
-                            ->afterStateUpdated(fn($get, $set) => CashierDepositForm::syncBalances($get, $set))
-                            ->readOnly(fn($operation) => (isCoordinator() == false && $operation !== 'edit')),
+                            ->stripCharacters('.')
+                            ->afterStateUpdated(fn ($get, $set) => CashierDepositForm::syncBalances($get, $set))
+                            ->readOnly(fn ($operation) => (isCoordinator() == false && $operation !== 'edit')),
                         TextInput::make('bank_deposit')
                             ->mask(RawJs::make('$money($input, \',\', \'.\')'))
                             ->label('Setoran ke Bank (Opsional)')
                             ->live(onBlur: true)
                             ->extraAttributes([
-                                'id' => 'bank_deposit'
+                                'id' => 'bank_deposit',
                             ])
-                            ->stripCharacters(".")
-                            ->afterStateUpdated(fn($get, $set) => CashierDepositForm::syncBalances($get, $set)),
+                            ->stripCharacters('.')
+                            ->afterStateUpdated(fn ($get, $set) => CashierDepositForm::syncBalances($get, $set)),
                         TextInput::make('bank_name')
                             ->label('Masukkan Nama Bank (Opsional)')
-                            ->helperText('Nama Bank dalam huruf besar (ex. BNI/BCA/BRI)')
+                            ->helperText('Nama Bank dalam huruf besar (ex. BNI/BCA/BRI)'),
                     ])->columnSpanFull(),
                 Grid::make([
                     'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
-                    'md' => 1
+                    'md' => 1,
                 ])
                     ->schema([
                         TextInput::make('today_income')
                             ->label('Penerimaan Hari Ini')->dehydrated()
                             ->mask(RawJs::make('$money($input, \',\', \'.\')'))
-                            ->afterStateUpdated(fn($get, $set) => CashierDepositForm::syncBalances($get, $set))
+                            ->afterStateUpdated(fn ($get, $set) => CashierDepositForm::syncBalances($get, $set))
                             ->live(onBlur: true)
-                            ->stripCharacters(".")
+                            ->stripCharacters('.')
                             ->extraAttributes([
-                                'id' => 'today_income'
+                                'id' => 'today_income',
                             ]),
                         TextInput::make('end_balance')
                             ->mask(RawJs::make('$money($input, \',\', \'.\')'))
                             ->label('Saldo akhir')
                             ->live(onBlur: true)
-                            ->afterStateUpdated(fn($get, $set) => CashierDepositForm::syncBalances($get, $set))
+                            ->afterStateUpdated(fn ($get, $set) => CashierDepositForm::syncBalances($get, $set))
 
                             ->extraAttributes([
-                                'id' => 'end_balance'
+                                'id' => 'end_balance',
                             ])
-                            ->stripCharacters(".")
+                            ->stripCharacters('.')
                             ->readOnly()
                             ->reactive(),
                         FileUpload::make('cashier_images')
@@ -274,14 +279,17 @@ class CashierDepositForm
                             ->panelLayout('grid')
                             // Jika tujuannya ingin menyimpan path lengkap agar bisa diakses:
                             ->mutateDehydratedStateUsing(function ($state) {
-                                if (!$state) return [];
+                                if (! $state) {
+                                    return [];
+                                }
+
                                 // Pastikan menyimpan path lengkap relatif terhadap disk 'public'
                                 return collect($state)->values()->toArray();
                             })
                             ->extraInputAttributes([
-                                "x-on:livewire-upload-start" => "\$dispatch('file-upload-started')",
-                                "x-on:livewire-upload-finish" => "\$dispatch('file-upload-finished')",
-                                "x-on:livewire-upload-error" => "\$dispatch('file-upload-error')",
+                                'x-on:livewire-upload-start' => "\$dispatch('file-upload-started')",
+                                'x-on:livewire-upload-finish' => "\$dispatch('file-upload-finished')",
+                                'x-on:livewire-upload-error' => "\$dispatch('file-upload-error')",
                             ]),
 
                     ])->columnSpanFull(),
@@ -289,15 +297,15 @@ class CashierDepositForm
                     'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
-                    'md' => 1
+                    'md' => 1,
                 ])
                     ->schema([
                         TextInput::make('expense')
                             ->label('Pengeluaran Hari Ini')->dehydrated()
                             ->mask(RawJs::make('$money($input, \',\', \'.\')'))
                             ->live(onBlur: true)
-                            ->stripCharacters(".")
-                            ->afterStateUpdated(fn($get, $set) => CashierDepositForm::syncBalances($get, $set))
+                            ->stripCharacters('.')
+                            ->afterStateUpdated(fn ($get, $set) => CashierDepositForm::syncBalances($get, $set))
                             ->extraAttributes(['id' => 'expense'])
                             ->helperText('Tidak Termasuk Setoran ke Bank'),
 
@@ -306,20 +314,20 @@ class CashierDepositForm
                             ->label('Kasbon Gantung')
                             ->live(onBlur: true)
                             ->extraAttributes([
-                                'id' => 'invoice_nominal'
+                                'id' => 'invoice_nominal',
                             ])
-                            ->afterStateUpdated(fn($get, $set) => CashierDepositForm::syncBalances($get, $set))
-                            ->stripCharacters("."),
+                            ->afterStateUpdated(fn ($get, $set) => CashierDepositForm::syncBalances($get, $set))
+                            ->stripCharacters('.'),
                         TextInput::make('total_deposit')
                             ->mask(RawJs::make('$money($input, \',\', \'.\')'))
                             ->label('Total Setoran ke Brankas')
                             ->live(onBlur: true)
-                            ->afterStateUpdated(fn($get, $set) => CashierDepositForm::syncBalances($get, $set))
+                            ->afterStateUpdated(fn ($get, $set) => CashierDepositForm::syncBalances($get, $set))
                             ->extraAttributes([
-                                'id' => 'total_deposit'
+                                'id' => 'total_deposit',
                             ])
-                            ->stripCharacters(".")
-                            ->readOnly()
+                            ->stripCharacters('.')
+                            ->readOnly(),
                     ])->columnSpanFull(),
                 Grid::make([
                     'default' => 1,
@@ -329,6 +337,8 @@ class CashierDepositForm
                             ->label('Keterangan')->columnSpanFull(),
 
                     ])->columnSpanFull(),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 }

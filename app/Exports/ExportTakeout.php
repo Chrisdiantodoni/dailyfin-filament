@@ -24,7 +24,7 @@ class ExportTakeout implements FromCollection, WithHeadings, WithMapping
     {
         $startDate = $this->startDate;
         $endDate = $this->endDate;
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = Auth::user()->dealer_users()->pluck('dealer_code')->all();
         return cashier_takeout_money::with('users', 'dealers', 'approval_takeout_money')->whereIn('dealer_code', $dealerCodes)
             ->when($this->startDate && $this->endDate, function ($query) use ($startDate, $endDate) {
                 return $query->whereBetween('date_published', [$startDate, $endDate]);

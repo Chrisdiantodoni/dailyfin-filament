@@ -9,20 +9,27 @@ use App\Models\CsServiceSparepart;
 use App\Models\CsUnit;
 use App\Models\ValidationDeposit;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class ExportPdfControler extends Controller
 {
+    private function dealerCodes(): array
+    {
+        return Auth::user()
+            ->dealer_users()
+            ->pluck('dealer_code')
+            ->all();
+    }
+
     public function exportPdfGeneral()
     {
         $startDate = request('start_date');
         $endDate = request('end_date');
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = $this->dealerCodes();
         $exportData = CsServiceSparepart::with('dealers', 'users', 'service_nominal_dtls')->whereIn('dealer_code', $dealerCodes)
-            ->when($startDate & $endDate, function ($query) use ($startDate, $endDate) {
+            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('date_published', [$startDate, $endDate]);
             })->latest()->get();
         $pdf = Pdf::loadView('pdf.report.export_general', compact('exportData', 'startDate', 'endDate'))->setPaper('a4', 'landscape')->setOption([
@@ -36,11 +43,11 @@ class ExportPdfControler extends Controller
     {
         $startDate = request('start_date');
         $endDate = request('end_date');
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = $this->dealerCodes();
         $exportData = CsUnit::with('dealers', 'users', 'unit_nominal_dtls')
             ->latest()
             ->whereIn('dealer_code', $dealerCodes)
-            ->when($startDate & $endDate, function ($query) use ($startDate, $endDate) {
+            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('date_published', [$startDate, $endDate]);
             })->get();
 
@@ -54,12 +61,12 @@ class ExportPdfControler extends Controller
     {
         $startDate = request('start_date');
         $endDate = request('end_date');
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = $this->dealerCodes();
         $exportData = CashierDeposit::latest()
             ->with(['approval_cashier', 'users', 'dealers', 'cashier_images'])
-            ->whereIn('dealer_code', $dealerCodes)->when($startDate & $endDate, function ($query) use ($startDate, $endDate) {
+            ->whereIn('dealer_code', $dealerCodes)->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('date_published', [$startDate, $endDate]);
-            })->latest()->get();
+            })->get();
 
         $pdf = Pdf::loadView('pdf.report.export_deposit', compact('exportData', 'startDate', 'endDate'))->setPaper('a4', 'landscape')->setOption([
             'tempDir' => public_path(),
@@ -71,9 +78,9 @@ class ExportPdfControler extends Controller
     {
         $startDate = request('start_date');
         $endDate = request('end_date');
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = $this->dealerCodes();
         $exportData = cashier_takeout_money::with('dealers', 'users')->whereIn('dealer_code', $dealerCodes)
-            ->when($startDate & $endDate, function ($query) use ($startDate, $endDate) {
+            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('date_published', [$startDate, $endDate]);
             })->latest()->get();
 
@@ -89,9 +96,9 @@ class ExportPdfControler extends Controller
     {
         $startDate = request('start_date');
         $endDate = request('end_date');
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = $this->dealerCodes();
         $exportData = ValidationDeposit::with('dealers', 'users')->whereIn('dealer_code', $dealerCodes)
-            ->when($startDate & $endDate, function ($query) use ($startDate, $endDate) {
+            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('date_published', [$startDate, $endDate]);
             })->latest()->get();
 
@@ -107,9 +114,9 @@ class ExportPdfControler extends Controller
 
         $startDate = request('start_date');
         $endDate = request('end_date');
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = $this->dealerCodes();
         $exportData = CashMutate::with('dealers', 'users',)->whereIn('dealer_code', $dealerCodes)
-            ->when($startDate & $endDate, function ($query) use ($startDate, $endDate) {
+            ->when($startDate && $endDate, function ($query) use ($startDate, $endDate) {
                 $query->whereBetween('date_published', [$startDate, $endDate]);
             })->latest()->get();
 
@@ -123,7 +130,7 @@ class ExportPdfControler extends Controller
 
     public function printPdfDeposit($id)
     {
-        $exportData = CashierDeposit::findOrFail($id);
+        $exportData = CashierDeposit::whereIn('dealer_code', $this->dealerCodes())->findOrFail($id);
         $pdf = Pdf::loadView('pdf.detail.deposit_box', compact('exportData'))->setPaper('a4')->setOption([
             'tempDir' => public_path(),
             'chroot' => public_path(),
@@ -134,7 +141,7 @@ class ExportPdfControler extends Controller
 
     public function printPdfTakeout($id)
     {
-        $exportData = cashier_takeout_money::findOrFail($id);
+        $exportData = cashier_takeout_money::whereIn('dealer_code', $this->dealerCodes())->findOrFail($id);
         $pdf = Pdf::loadView('pdf.detail.takeout', compact('exportData'))->setPaper('a4')->setOption([
             'tempDir' => public_path(),
             'chroot' => public_path(),
@@ -145,7 +152,7 @@ class ExportPdfControler extends Controller
 
     public function printPdfValidate($id)
     {
-        $exportData = ValidationDeposit::findOrFail($id);
+        $exportData = ValidationDeposit::whereIn('dealer_code', $this->dealerCodes())->findOrFail($id);
         $pdf = Pdf::loadView('pdf.detail.validate_deposit', compact('exportData'))->setPaper('a4')->setOption([
             'tempDir' => public_path(),
             'chroot' => public_path(),
@@ -156,7 +163,7 @@ class ExportPdfControler extends Controller
 
     public function printPdfCashMutation($id)
     {
-        $exportData = CashMutate::findOrFail($id);
+        $exportData = CashMutate::whereIn('dealer_code', $this->dealerCodes())->findOrFail($id);
         $pdf = Pdf::loadView('pdf.detail.cash_mutate', compact('exportData'))->setPaper('a4')->setOption([
             'tempDir' => public_path(),
             'chroot' => public_path(),
@@ -170,7 +177,7 @@ class ExportPdfControler extends Controller
 
         $startDate = request('start_date');
         $endDate = request('end_date');
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = $this->dealerCodes();
         $exportData = DB::table("cashier_deposits")
             ->select(
                 DB::raw('DISTINCT dealers.dealer_code as dealer_code'),

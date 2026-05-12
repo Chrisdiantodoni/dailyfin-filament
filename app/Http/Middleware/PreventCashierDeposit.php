@@ -6,7 +6,6 @@ use App\Models\CashierDeposit;
 use Carbon\Carbon;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class PreventCashierDeposit
@@ -20,13 +19,13 @@ class PreventCashierDeposit
     {
         $dealerCodes = $request->dealer_code;
         $existingSubmission = CashierDeposit::where('dealer_code', $dealerCodes)
-            ->whereDate('date_published', Carbon::today()) // Cek apakah sudah ada di hari ini
+            ->where('date_published', Carbon::today()->toDateString()) // Cek apakah sudah ada di hari ini
             ->exists(); // Cukup cek keberadaan data, tidak perlu fetch record penuh
 
         if ($existingSubmission) {
             return redirect()->back()->with([
                 'message' => "Already Submitted Form Can't Submit Anymore",
-                'alert-type' => 'error'
+                'alert-type' => 'error',
             ]);
         }
 

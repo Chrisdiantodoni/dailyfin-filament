@@ -5,6 +5,7 @@ namespace App\Filament\Resources\CounterServiceDeposits\Schemas;
 use App\Filament\Resources\CounterServiceDeposits\CounterServiceDepositResource;
 use App\Models\Dealer;
 use App\Models\DealerUser;
+use App\Support\UserDealerContext;
 use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -29,6 +30,9 @@ class CounterServiceDepositForm
     public static function configure(Schema $schema): Schema
     {
         return $schema->schema([
+            Section::make('Input Setoran Counter Service')
+                ->description('Lengkapi data setoran cash, transfer, pengeluaran, dealer, dan keterangan.')
+                ->schema([
             Grid::make([
                 'default' => 1,
                 'sm' => 1,
@@ -131,8 +135,8 @@ class CounterServiceDepositForm
 
                     TextInput::make('dealer_code_single')
                         ->label('Dealer')->dehydrated()
-                        ->default(fn() => Auth::user()->dealer_users->first()->dealers->dealer_name)
-                        ->hidden(fn() => Auth::user()->dealer_users->count() > 1)
+                        ->default(fn() => UserDealerContext::firstDealerName())
+                        ->hidden(fn() => UserDealerContext::hasMultipleDealers())
                         ->readOnly(),
                     Select::make('dealer_code')
                         ->required()
@@ -146,7 +150,7 @@ class CounterServiceDepositForm
                         ->preload()
                         ->searchable()
                         ->placeholder('Pilih Dealer')
-                        ->hidden(fn() => Auth::user()->dealer_users->count() === 1)
+                        ->hidden(fn() => UserDealerContext::hasSingleDealer())
                         ->live(),
                 ])->columnSpanFull(),
 
@@ -159,6 +163,8 @@ class CounterServiceDepositForm
 
                 ])->columnSpanFull(),
 
+                ])
+                ->columnSpanFull(),
         ]);
     }
 }

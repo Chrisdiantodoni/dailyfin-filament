@@ -26,9 +26,9 @@ class CashMutateResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
     protected static ?string $recordTitleAttribute = 'Mutasi Kas';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 2;
     protected static ?string $navigationLabel = 'Mutasi Kas';
-    protected static string | UnitEnum | null $navigationGroup = 'Mutasi & Kas';
+    protected static string | UnitEnum | null $navigationGroup = 'Laporan Kas';
 
     public static function form(Schema $schema): Schema
     {
@@ -51,14 +51,10 @@ class CashMutateResource extends Resource
     }
     public static function getEloquentQuery(): Builder
     {
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
-
-
-        $startDate = now()->startOfMonth();
-        $endDate   = now()->endOfMonth();
+        $dealerCodes = Auth::user()->dealer_users()->pluck('dealer_code')->all();
 
         return parent::getEloquentQuery()
-            ->with(['users'])
+            ->with(['users', 'dealers', 'cash_images'])
             ->whereIn('dealer_code', $dealerCodes)
             ->latest();
     }

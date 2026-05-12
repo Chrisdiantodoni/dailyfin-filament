@@ -20,7 +20,7 @@ class CashierDepositMutate extends Model
     protected $keyType = 'string';
     public static function getReportQuery(?string $startDate = null, ?string $endDate = null)
     {
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = Auth::user()->dealer_users()->pluck('dealer_code')->all();
         // 1. Set default seminggu jika parameter kosong
         $startDate = $startDate ?: now()->subDays(7)->toDateString();
         $endDate = $endDate ?: now()->toDateString();

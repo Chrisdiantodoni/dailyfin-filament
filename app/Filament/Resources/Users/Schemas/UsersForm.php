@@ -94,6 +94,9 @@ class UsersForm
     {
         return $schema
             ->components([
+                Section::make('Input User')
+                    ->description('Lengkapi identitas, jabatan, dealer, dan wewenang user.')
+                    ->schema([
                 TextInput::make('name')
                     ->label('Nama Lengkap')
                     ->required()
@@ -238,6 +241,8 @@ class UsersForm
                 ])->extraAttributes([
                     'class' => 'flex gap-2 bg-transparent',
                 ])->columnSpanFull(),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 }

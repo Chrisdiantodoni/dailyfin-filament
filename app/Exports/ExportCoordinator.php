@@ -25,7 +25,7 @@ class ExportCoordinator implements FromCollection, WithHeadings, WithMapping
     {
         $startDate = $this->startDate;
         $endDate = $this->endDate;
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = Auth::user()->dealer_users()->pluck('dealer_code')->all();
         return  DB::table("cashier_deposits")
             ->select(
                 DB::raw('DISTINCT dealers.dealer_code as dealer_code'),

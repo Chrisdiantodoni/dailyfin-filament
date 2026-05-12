@@ -25,7 +25,7 @@ class ExportDeposit implements FromCollection, WithHeadings, WithMapping
     {
         $startDate = $this->startDate;
         $endDate = $this->endDate;
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = Auth::user()->dealer_users()->pluck('dealer_code')->all();
         return CashierDeposit::latest()
             ->with(['approval_cashier', 'users', 'dealers', 'cashier_images'])
             ->whereIn('dealer_code', $dealerCodes)

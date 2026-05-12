@@ -22,7 +22,7 @@ class DealerResource extends Resource
     protected static ?string $model = Dealer::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 1;
     protected static string | UnitEnum | null $navigationGroup = 'Master Data';
 
     protected static ?string $recordTitleAttribute = 'Dealer';

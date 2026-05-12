@@ -8,6 +8,7 @@ use App\Filament\Widgets\TransactionTrendChart;
 use App\Filament\Widgets\ValidasiOverview;
 use App\Models\Dealer;
 use App\Models\DealerUser;
+use App\Support\UserDealerContext;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Pages\Dashboard\Actions\FilterAction;
@@ -44,7 +45,7 @@ class Dashboard extends BaseDashboard
                         ->default(null)
                         ->searchable()
                         ->placeholder('Pilih Dealer')
-                        ->hidden(fn () => Auth::user()->dealer_users->count() === 1)
+                        ->hidden(fn () => UserDealerContext::hasSingleDealer())
                         ->live(),
                 ]),
         ];

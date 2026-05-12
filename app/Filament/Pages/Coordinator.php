@@ -3,7 +3,6 @@
 namespace App\Filament\Pages;
 
 use App\Exports\ExportCoordinator;
-use App\Models\CashierDeposit;
 use App\Models\CashierDepositMutate;
 use App\Models\Coordinator as ModelsCoordinator;
 use BackedEnum;
@@ -12,27 +11,25 @@ use Filament\Actions\ActionGroup;
 use Filament\Forms\Components\DatePicker;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
-use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use UnitEnum;
-use Illuminate\Support\Facades\DB;
-use Maatwebsite\Excel\Excel;
 
 class Coordinator extends Page implements HasTable
 {
     use InteractsWithTable;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::ClipboardDocumentCheck;
-    protected static string | UnitEnum | null $navigationGroup = 'Mutasi & Kas';
-    protected static ?int $navigationSort = 5;
+
+    protected static string|UnitEnum|null $navigationGroup = 'Laporan Kas';
+
+    protected static ?int $navigationSort = 4;
+    protected static ?string $navigationLabel = 'Cek Koordinator';
 
     public function getBreadcrumbs(): array
     {
@@ -40,16 +37,20 @@ class Coordinator extends Page implements HasTable
             'Daftar Laporan Koordinator',
         ];
     }
+
     public static function canAccess(): bool
     {
         /** @var \App\Models\User&\Spatie\Permission\Traits\HasRoles $user */
         $user = Auth::user();
-        return $user->hasPermissionTo("Coordinator");
+
+        return $user->hasPermissionTo('Coordinator');
     }
+
     public function getTitle(): string
     {
         return 'Daftar Laporan Koordinator';
     }
+
     protected string $view = 'filament.pages.coordinator';
 
     public function store($record)
@@ -57,21 +58,22 @@ class Coordinator extends Page implements HasTable
 
         $coordinator = ModelsCoordinator::firstOrCreate(
             [
-                'dealer_code'    => $record->dealer_code,
+                'dealer_code' => $record->dealer_code,
                 'date_published' => $record->date_published,
             ],
             [
                 'start_balance_cashier' => $record->start_balance_cashier ?? 0,
-                'end_balance_cashier'   => $record->end_balance_cashier ?? 0,
-                'invoice_cashier'       => $record->invoice_cashier ?? 0,
+                'end_balance_cashier' => $record->end_balance_cashier ?? 0,
+                'invoice_cashier' => $record->invoice_cashier ?? 0,
                 'start_balance_mutates' => $record->start_balance_mutates ?? 0,
-                'end_balance_mutates'   => $record->end_balance_mutates ?? 0,
-                'invoice_mutates'       => $record->invoice_mutates ?? 0,
-                'status'                => 'request',
+                'end_balance_mutates' => $record->end_balance_mutates ?? 0,
+                'invoice_mutates' => $record->invoice_mutates ?? 0,
+                'status' => 'request',
             ]
         );
 
         $url = CoordinatorDetail::getUrl(['id' => $coordinator->id]);
+
         return redirect()->to($url);
     }
 
@@ -79,7 +81,6 @@ class Coordinator extends Page implements HasTable
     {
         return [];
     }
-
 
     public function table(Table $table): Table
     {
@@ -104,11 +105,11 @@ class Coordinator extends Page implements HasTable
                             $filters = $this->getTableFilterState('date_range');
 
                             $start = $filters['start_date'] ?? null;
-                            $end   = $filters['end_date'] ?? null;
+                            $end = $filters['end_date'] ?? null;
 
                             return \Maatwebsite\Excel\Facades\Excel::download(
                                 new ExportCoordinator($start, $end),
-                                'Report Setoran Kasir ke Brankas ' . ($start ?? 'awal') . ' s.d ' . ($end ?? 'akhir') . '.xlsx'
+                                'Report Setoran Kasir ke Brankas '.($start ?? 'awal').' s.d '.($end ?? 'akhir').'.xlsx'
                             );
                         }),
 
@@ -121,7 +122,7 @@ class Coordinator extends Page implements HasTable
 
                             return route('export.coordinator.pdf', [
                                 'start_date' => $filters['start_date'] ?? null,
-                                'end_date'   => $filters['end_date'] ?? null,
+                                'end_date' => $filters['end_date'] ?? null,
                             ]);
                         })
                         ->openUrlInNewTab(),
@@ -146,21 +147,22 @@ class Coordinator extends Page implements HasTable
                             // FILTERING DILAKUKAN DI SINI
                             return $query
                                 ->when($data['start_date'], function ($q, $date) {
-                                    return $q->whereDate('cashier_deposits.date_published', '>=', $date);
+                                    return $q->where('cashier_deposits.date_published', '>=', $date);
                                 })
                                 ->when($data['end_date'], function ($q, $date) {
-                                    return $q->whereDate('cashier_deposits.date_published', '<=', $date);
+                                    return $q->where('cashier_deposits.date_published', '<=', $date);
                                 });
                         }
                     )
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
                         if ($data['start_date'] ?? null) {
-                            $indicators['start_date'] = 'Dari: ' . \Carbon\Carbon::parse($data['start_date'])->toFormattedDateString();
+                            $indicators['start_date'] = 'Dari: '.\Carbon\Carbon::parse($data['start_date'])->toFormattedDateString();
                         }
                         if ($data['end_date'] ?? null) {
-                            $indicators['end_date'] = 'Sampai: ' . \Carbon\Carbon::parse($data['end_date'])->toFormattedDateString();
+                            $indicators['end_date'] = 'Sampai: '.\Carbon\Carbon::parse($data['end_date'])->toFormattedDateString();
                         }
+
                         return $indicators;
                     }),
                 Filter::make('status')
@@ -186,7 +188,7 @@ class Coordinator extends Page implements HasTable
             ->recordActions([
                 Action::make('View')->icon('heroicon-o-eye')
                     ->color('primary')
-                    ->action(fn($record) => $this->store($record))
+                    ->action(fn ($record) => $this->store($record)),
                 // ->url(fn($record): string => CoordinatorDetail::getUrl([
                 //     'dealer_code' => $record->dealer_code,
                 //     'date_published' => $record->date_published,
@@ -203,83 +205,79 @@ class Coordinator extends Page implements HasTable
 
                 // Blok Saldo Harian Kasir
                 TextColumn::make('start_balance_cashier')
-                    ->label('Saldo Awal')->label("Saldo Awal Kasir")->searchable()
+                    ->label('Saldo Awal')->label('Saldo Awal Kasir')->searchable()
                     ->money('idr', true)
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('end_balance_cashier')->label("Saldo Akhir Kasir")->searchable()
+                TextColumn::make('end_balance_cashier')->label('Saldo Akhir Kasir')->searchable()
                     ->label('Saldo Akhir')
                     ->money('idr', true)
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('invoice_cashier')->label("Kas Gantung Kasir")->searchable()
+                TextColumn::make('invoice_cashier')->label('Kas Gantung Kasir')->searchable()
                     ->label('Kas Gantung')
                     ->money('idr', true)
                     ->toggleable(isToggledHiddenByDefault: true),
 
-
                 // Blok Saldo GL (mutasi)
-                TextColumn::make('start_balance_mutates')->label("Saldo Awal GL")->searchable()
+                TextColumn::make('start_balance_mutates')->label('Saldo Awal GL')->searchable()
                     ->label('Saldo Awal')
                     ->money('idr', true)
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('end_balance_mutates')->label("Saldo Akhir GL")->searchable()
+                TextColumn::make('end_balance_mutates')->label('Saldo Akhir GL')->searchable()
                     ->label('Saldo Akhir')
                     ->money('idr', true)
                     ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('invoice_mutates')->label("Kas Gantung Kasir")->searchable()
+                TextColumn::make('invoice_mutates')->label('Kas Gantung Kasir')->searchable()
                     ->label('Kas Gantung')
                     ->money('idr', true)
                     ->toggleable(isToggledHiddenByDefault: true),
 
-
                 // Blok Selisih
                 TextColumn::make('selisih_awal')
-                    ->label("Selisih Saldo Awal")
-                    ->color(fn($state) => $state < 0 ? 'danger' : null) // merah jika minus
-                    ->getStateUsing(fn($record) => $record->start_balance_cashier - $record->start_balance_mutates)
+                    ->label('Selisih Saldo Awal')
+                    ->color(fn ($state) => $state < 0 ? 'danger' : null) // merah jika minus
+                    ->getStateUsing(fn ($record) => $record->start_balance_cashier - $record->start_balance_mutates)
                     ->money('idr', true)
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('selisih_akhir')
                     ->label('Selisih Saldo Akhir')
-                    ->color(fn($state) => $state < 0 ? 'danger' : null) // merah jika minus
-                    ->getStateUsing(fn($record) => $record->end_balance_cashier - $record->end_balance_mutates)
+                    ->color(fn ($state) => $state < 0 ? 'danger' : null) // merah jika minus
+                    ->getStateUsing(fn ($record) => $record->end_balance_cashier - $record->end_balance_mutates)
                     ->money('idr', true)
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('selisih_invoice')
                     ->label('Selisih Kas Gantung')
-                    ->color(fn($state) => $state < 0 ? 'danger' : null) // merah jika minus
+                    ->color(fn ($state) => $state < 0 ? 'danger' : null) // merah jika minus
 
-                    ->getStateUsing(fn($record) => $record->invoice_cashier - $record->invoice_mutates)
+                    ->getStateUsing(fn ($record) => $record->invoice_cashier - $record->invoice_mutates)
                     ->money('idr', true)
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('coordinator_status') // ✅ matches alias, not relationship dot notation
                     ->label('Status')
-                    ->getStateUsing(fn($record) => $record->coordinator_status ?: 'request') // ✅ fixed: state → coordinator_status
+                    ->getStateUsing(fn ($record) => $record->coordinator_status ?: 'request') // ✅ fixed: state → coordinator_status
                     ->label('Status')
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
                         'request' => 'Menunggu',
                         'approve' => 'Disetujui',
-                        'reject'  => 'Ditolak',
+                        'reject' => 'Ditolak',
                         '' => 'Menunggu',
-                        default   => ucfirst($state),
+                        default => ucfirst($state),
                     })
-                    ->icon(fn(string $state): string => match ($state) {
+                    ->icon(fn (string $state): string => match ($state) {
                         'request' => 'heroicon-o-arrow-path',   // mirip fa-rotate-right
                         'approve' => 'heroicon-o-check',
-                        'reject'  => 'heroicon-o-x-mark',
+                        'reject' => 'heroicon-o-x-mark',
                         '' => 'heroicon-o-arrow-path',   // mirip fa-rotate-right
-                        default   => 'heroicon-o-question-mark-circle',
+                        default => 'heroicon-o-question-mark-circle',
                     })
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'request' => 'primary',
                         'approve' => 'success',
-                        'reject'  => 'danger',
+                        'reject' => 'danger',
                         '' => 'primary',
-                        default   => 'gray',
+                        default => 'gray',
                     }),
             ]);
     }
-
-
 
     public function getTableRecordKey(mixed $record): string
     {
@@ -291,7 +289,7 @@ class Coordinator extends Page implements HasTable
 
         // fallback kalau id null
         if (! empty($record->dealer_code) && ! empty($record->date_published)) {
-            return (string) ($record->dealer_code . '_' . $record->date_published);
+            return (string) ($record->dealer_code.'_'.$record->date_published);
         }
 
         return uniqid('row_', true);

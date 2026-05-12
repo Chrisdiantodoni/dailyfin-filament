@@ -8,7 +8,6 @@ use App\Models\CashMutate;
 use App\Models\ValidationDeposit;
 use Filament\Widgets\ChartWidget;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
-use Illuminate\Support\Facades\DB;
 
 class TransactionTrendChart extends ChartWidget
 {
@@ -54,8 +53,8 @@ class TransactionTrendChart extends ChartWidget
     protected function dailyCounts(string $modelClass, array $range, array $dateKeys): array
     {
         $rows = $this->applyDashboardFilters($modelClass::query(), $range)
-            ->selectRaw('DATE(date_published) as published_date, COUNT(*) as total')
-            ->groupBy(DB::raw('DATE(date_published)'))
+            ->selectRaw('date_published as published_date, COUNT(*) as total')
+            ->groupBy('date_published')
             ->pluck('total', 'published_date');
 
         return collect($dateKeys)

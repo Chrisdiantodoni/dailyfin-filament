@@ -32,6 +32,19 @@ class CashierDepositDetail extends  ViewRecord implements HasTable
 
     protected static string $resource = CashierDepositResource::class;
 
+    public function mount(int | string $record): void
+    {
+        parent::mount($record);
+
+        if (getRole() !== 'Finance Operation' || $this->record->is_seen_ops) {
+            return;
+        }
+
+        $this->record
+            ->forceFill(['is_seen_ops' => true])
+            ->saveQuietly();
+    }
+
     protected function getHeaderActions(): array
     {
         return [

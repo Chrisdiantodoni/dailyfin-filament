@@ -15,6 +15,11 @@ class CashierDeposit extends Model
     use HasFactory, HasUuids;
     protected $guarded = [];
 
+    protected $casts = [
+        'is_seen_ops' => 'boolean',
+        'is_seen_spv' => 'boolean',
+    ];
+
     public function users()
     {
         return $this->belongsTo(User::class, 'user_id', 'id');

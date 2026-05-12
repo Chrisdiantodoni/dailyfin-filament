@@ -25,10 +25,11 @@ class ValidationDepositResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::MagnifyingGlassCircle;
 
     protected static ?string $recordTitleAttribute = 'Validasi Setoran';
+    protected static ?string $navigationLabel = 'Validasi Setoran Tunai';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Setoran & Validasi';
+    protected static string | UnitEnum | null $navigationGroup = 'Setoran ke Bank';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 1;
 
     public static function form(Schema $schema): Schema
     {
@@ -53,9 +54,10 @@ class ValidationDepositResource extends Resource
     }
     public static function getEloquentQuery(): Builder
     {
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = Auth::user()->dealer_users()->pluck('dealer_code')->all();
 
         return parent::getEloquentQuery()
+            ->with(['users', 'dealers', 'validate_imgs'])
             ->whereIn('dealer_code', $dealerCodes)
             ->latest();
     }

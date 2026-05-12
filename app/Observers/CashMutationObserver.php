@@ -65,7 +65,7 @@ class CashMutationObserver
      */
     public function updated(CashMutate $cashMutate): void
     {
-        if (($cashMutate->incomes_neqs > 0 || $cashMutate->expenses_neqs) > 0 && $cashMutate->status == 'approve') {
+        if (($cashMutate->incomes_neqs > 0 || $cashMutate->expenses_neqs > 0) && $cashMutate->status === 'approve') {
             $recipients = User::whereHas("roles", function ($q) {
                 return $q->whereIn('name', ['IT', 'Audit Coordinator', 'Finance Spv', 'Finance Operation']);
             })->whereHas('dealer_users', function ($q) use ($cashMutate) {

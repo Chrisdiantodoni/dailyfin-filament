@@ -27,11 +27,11 @@ class CashierDepositResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::InboxArrowDown;
 
     protected static ?string $recordTitleAttribute = 'CashierDeposit';
-    protected static ?string $navigationLabel = 'Setoran Brankas';
+    protected static ?string $navigationLabel = 'Setoran Brankas Sore';
 
-    protected static string | UnitEnum | null $navigationGroup = 'Setoran & Validasi';
+    protected static string | UnitEnum | null $navigationGroup = 'Laporan Kas';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 1;
     // protected static string | UnitEnum | null $navigationLabel = 'Setoran Harian Brankas';
     public static function canAccess(): bool
     {
@@ -54,7 +54,14 @@ class CashierDepositResource extends Resource
         }
 
         if (getRole() === 'Finance Operation') {
-            return CashierDeposit::where('status', 'is_seen_ops')->count();
+            $dealerCodes = Auth::user()->dealer_users()->pluck('dealer_code')->all();
+            /** @var Builder $badgeQuery */
+            $badgeQuery = CashierDeposit::query();
+
+            return (string) $badgeQuery
+                ->whereIn('dealer_code', $dealerCodes)
+                ->where('is_seen_ops', false)
+                ->count();
         }
 
         return null;
@@ -72,9 +79,10 @@ class CashierDepositResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = Auth::user()->dealer_users()->pluck('dealer_code')->all();
 
         return parent::getEloquentQuery()
+            ->with(['users', 'dealers', 'cashier_images'])
             ->whereIn('dealer_code', $dealerCodes)
             ->latest();
     }

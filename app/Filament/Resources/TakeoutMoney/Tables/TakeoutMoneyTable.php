@@ -4,8 +4,6 @@ namespace App\Filament\Resources\TakeoutMoney\Tables;
 
 use App\Filament\Resources\TakeoutMoney\TakeoutMoneyResource;
 use Filament\Actions\Action;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Columns\TextColumn;
@@ -31,43 +29,43 @@ class TakeoutMoneyTable
                 }),
                 TextColumn::make('revised_finance_nominal')->label('Saldo Revisi')
                     ->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->revised_finance_nominal))
+                    ->getStateUsing(fn ($record) => formatNumber($record->revised_finance_nominal))
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('end_balance')->label('Jumlah Uang di Brankas')
                     ->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->end_balance))
+                    ->getStateUsing(fn ($record) => formatNumber($record->end_balance))
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('money_put')->label('Jumlah Uang Titipan')
                     ->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->money_put))
+                    ->getStateUsing(fn ($record) => formatNumber($record->money_put))
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('takeout_nominal')->label('Total Uang yang Dikeluarkan')
                     ->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->takeout_nominal))
+                    ->getStateUsing(fn ($record) => formatNumber($record->takeout_nominal))
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('revised_ops_nominal')->label('Revisi Jumlah Uang Dikeluarkan')
                     ->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->revised_ops_nominal))
+                    ->getStateUsing(fn ($record) => formatNumber($record->revised_ops_nominal))
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')
                     ->label('Status')
-                    ->formatStateUsing(fn(string $state): string => match ($state) {
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
                         'request' => 'Menunggu',
                         'approve' => 'Disetujui',
-                        'reject'  => 'Ditolak',
-                        default   => ucfirst($state),
+                        'reject' => 'Ditolak',
+                        default => ucfirst($state),
                     })
-                    ->icon(fn(string $state): string => match ($state) {
+                    ->icon(fn (string $state): string => match ($state) {
                         'request' => 'heroicon-o-arrow-path',   // mirip fa-rotate-right
                         'approve' => 'heroicon-o-check',
-                        'reject'  => 'heroicon-o-x-mark',
-                        default   => 'heroicon-o-question-mark-circle',
+                        'reject' => 'heroicon-o-x-mark',
+                        default => 'heroicon-o-question-mark-circle',
                     })
-                    ->color(fn(string $state): string => match ($state) {
+                    ->color(fn (string $state): string => match ($state) {
                         'request' => 'primary',
                         'approve' => 'success',
-                        'reject'  => 'danger',
-                        default   => 'gray',
+                        'reject' => 'danger',
+                        default => 'gray',
                     }),
             ])
             ->filters([
@@ -86,16 +84,17 @@ class TakeoutMoneyTable
                     ])
                     ->query(function ($query, array $data) {
                         return $query
-                            ->when($data['start_date'], fn($q) => $q->whereDate('date_published', '>=', $data['start_date']))
-                            ->when($data['end_date'], fn($q) => $q->whereDate('date_published', '<=', $data['end_date']));
+                            ->when($data['start_date'], fn ($q) => $q->where('date_published', '>=', $data['start_date']))
+                            ->when($data['end_date'], fn ($q) => $q->where('date_published', '<=', $data['end_date']));
                     })->indicateUsing(function (array $data): array {
                         $indicators = [];
                         if ($data['start_date'] ?? null) {
-                            $indicators['start_date'] = 'Dari: ' . \Carbon\Carbon::parse($data['start_date'])->toFormattedDateString();
+                            $indicators['start_date'] = 'Dari: '.\Carbon\Carbon::parse($data['start_date'])->toFormattedDateString();
                         }
                         if ($data['end_date'] ?? null) {
-                            $indicators['end_date'] = 'Sampai: ' . \Carbon\Carbon::parse($data['end_date'])->toFormattedDateString();
+                            $indicators['end_date'] = 'Sampai: '.\Carbon\Carbon::parse($data['end_date'])->toFormattedDateString();
                         }
+
                         return $indicators;
                     }),
                 Filter::make('status')
@@ -105,7 +104,7 @@ class TakeoutMoneyTable
                             ->options([
                                 'request' => 'Menunggu',
                                 'approve' => 'Disetujui',
-                                'reject'  => 'Ditolak',
+                                'reject' => 'Ditolak',
                             ])
                             ->placeholder('Semua'),
                     ])
@@ -113,6 +112,7 @@ class TakeoutMoneyTable
                         if (! isset($data['status'])) {
                             return $query;
                         }
+
                         return $query->where('status', $data['status']);
                     }),
             ])
@@ -120,8 +120,8 @@ class TakeoutMoneyTable
             ->recordActions([
                 Action::make('View')->icon('heroicon-o-eye')
                     ->color('primary')
-                    ->url(fn($record) => TakeoutMoneyResource::getUrl('detail', ['record' => $record])),
-                EditAction::make()->hidden(fn() => cannot('Coordinator Resources'))->color('danger'),
+                    ->url(fn ($record) => TakeoutMoneyResource::getUrl('detail', ['record' => $record])),
+                EditAction::make()->hidden(fn () => cannot('Coordinator Resources'))->color('danger'),
 
             ]);
     }

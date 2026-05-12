@@ -26,7 +26,7 @@ class CounterServiceUnitResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
     protected static ?string $navigationLabel = 'Setoran Unit';
-    protected static string | UnitEnum | null $navigationGroup = 'Counter Service';
+    protected static string | UnitEnum | null $navigationGroup = 'Setoran ke Kasir';
     protected static ?string $recordTitleAttribute = 'CsUnit';
 
     public static function getNavigationSort(): ?int
@@ -69,11 +69,7 @@ class CounterServiceUnitResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
-
-
-        $startDate = now()->startOfMonth();
-        $endDate   = now()->endOfMonth();
+        $dealerCodes = Auth::user()->dealer_users()->pluck('dealer_code')->all();
 
         return parent::getEloquentQuery()
             ->with(['users', 'unit_nominal_dtls', 'dealers', 'unit_images', 'approval_cs_cashiers_units.user'])

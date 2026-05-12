@@ -26,7 +26,7 @@ class ExportUnit implements FromCollection, WithHeadings, WithMapping
     {
         $startDate = $this->startDate;
         $endDate = $this->endDate;
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = Auth::user()->dealer_users()->pluck('dealer_code')->all();
         return CsUnit::with('users', 'dealers', 'unit_nominal_dtls')->whereIn('dealer_code', $dealerCodes)
             ->when($this->startDate && $this->endDate, function ($query) use ($startDate, $endDate) {
                 return $query->whereBetween('date_published', [$startDate, $endDate]);

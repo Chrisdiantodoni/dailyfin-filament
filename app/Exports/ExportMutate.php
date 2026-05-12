@@ -24,7 +24,7 @@ class ExportMutate implements FromCollection, WithHeadings, WithMapping
     {
         $startDate = $this->startDate;
         $endDate = $this->endDate;
-        $dealerCodes = Auth::user()->dealer_users->pluck('dealers.dealer_code')->toArray();
+        $dealerCodes = Auth::user()->dealer_users()->pluck('dealer_code')->all();
         return CashMutate::with('users', 'dealers', 'approval_mutate', 'approval_mutate.user')->whereIn('dealer_code', $dealerCodes)
             ->when($this->startDate && $this->endDate, function ($query) use ($startDate, $endDate) {
                 return $query->whereBetween('date_published', [$startDate, $endDate]);
