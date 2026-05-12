@@ -9,6 +9,7 @@ use App\Models\CsServiceSparepart;
 use App\Models\ServiceNominalDtl;
 use App\Services\ImageCompressionService;
 use App\Support\UploadStorage;
+use App\Support\UserDealerContext;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -78,7 +79,7 @@ class EditCounterServiceDeposit extends EditRecord
         CsServiceSparepart::find($record['id'])
             ->update([
                 'date_published' => $data['date_published'],
-                'dealer_code' => $data['dealer_code'] ?? 0,
+                'dealer_code' => UserDealerContext::resolveDealerCode($data),
                 'total_income' => $data['total_income'] ?? 0,
                 'total_expense' => $data['total_expense'] ?? 0,
                 'user_id' => $user_id,

@@ -8,6 +8,7 @@ use App\Models\CashImages;
 use App\Models\CashMutate;
 use App\Services\ImageCompressionService;
 use App\Support\UploadStorage;
+use App\Support\UserDealerContext;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
@@ -49,7 +50,7 @@ class CreateCashMutate extends CreateRecord
 
         $data = $this->data;
 
-        $dealer_code = $data['dealer_code'];
+        $dealer_code = UserDealerContext::resolveDealerCode($data);
         $lastSubmission = CashMutate::where('dealer_code', $dealer_code)->latest()->first();
         if ($lastSubmission) {
             $date_published = Carbon::parse($lastSubmission->date_published);
@@ -100,8 +101,8 @@ class CreateCashMutate extends CreateRecord
             'deadline_time' => Carbon::now()->addDay()->setHour(14)->setMinute(0)->setSecond(0),
 
             'approval_type' => 'finSpv',
-            'status' => isCoordinator() ? "approve" : 'request',
-            'dealer_code' => $data['dealer_code'],
+            'status' => 'request',
+            'dealer_code' => UserDealerContext::resolveDealerCode($data),
             'description' => $data['description'] ?? "",
             'income' =>
             $data['income'] ?? 0,
@@ -137,7 +138,7 @@ class CreateCashMutate extends CreateRecord
         $approval_data = new ApprovalMutateCash();
         $approval_data->user_id = Auth::user()->id;
         $approval_data->description = isCoordinator() ? "Coordinator Melaporkan Laporan Mutasi Kas" : "Finance Ops Melaporkan Laporan Mutasi Kas dikirim ke Finance Spv";
-        $approval_data->status = isCoordinator() ? "approve" : "request";
+        $approval_data->status = "request";
         $approval_data->cash_mutates_id = $cash_mutate->id;
         $approval_data->save();
 

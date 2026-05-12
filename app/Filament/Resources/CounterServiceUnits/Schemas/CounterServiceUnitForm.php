@@ -7,6 +7,7 @@ use App\Support\UserDealerContext;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -130,11 +131,15 @@ class CounterServiceUnitForm
                         ->default(0)
                         ->readOnly(),
 
-                    Select::make('dealer_code_single')
-                        ->label('Dealer')->dehydrated()
+                    TextInput::make('dealer_display')
+                        ->label('Dealer')
                         ->default(fn() => UserDealerContext::firstDealerName())
                         ->hidden(fn() => UserDealerContext::hasMultipleDealers())
-                        ->disabled(),
+                        ->dehydrated(false)
+                        ->readOnly(),
+                    Hidden::make('dealer_code_single')
+                        ->default(fn() => UserDealerContext::firstDealerCode())
+                        ->dehydrated(),
                     Select::make('dealer_code')
                         ->required()
                         ->label('Dealer')

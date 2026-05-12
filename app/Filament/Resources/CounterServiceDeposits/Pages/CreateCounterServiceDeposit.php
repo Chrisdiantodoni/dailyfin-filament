@@ -12,6 +12,7 @@ use App\Models\SparepartImage;
 use App\Models\User;
 use App\Services\ImageCompressionService;
 use App\Support\UploadStorage;
+use App\Support\UserDealerContext;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\DatePicker;
@@ -60,13 +61,13 @@ class CreateCounterServiceDeposit extends CreateRecord
         ]);
         $cs_sparepart = CsServiceSparepart::create([
             'date_published' => $data['date_published'],
-            'dealer_code' => $data['dealer_code'] ?? $data['dealer_code_single'],
+            'dealer_code' => UserDealerContext::resolveDealerCode($data),
             'total_income' => $data['total_income'] ?? 0,
             'total_expense' => $data['total_expense'] ?? 0,
             'user_id' => $user_id,
             'approval_type' => 'Cashier',
             'description' => $data['description'],
-            'status' => isCoordinator() ? 'approve' : 'request',
+            'status' => 'request',
             'service_sparepart_dtl' => $service_nominal_dtls->id
         ]);
 
@@ -74,7 +75,7 @@ class CreateCounterServiceDeposit extends CreateRecord
         $approval_data->cs_service_spareparts_id = $cs_sparepart->id;
         $approval_data->user_id = $user_id;
         $approval_data->description = isCoordinator() ? "Administrator Membuat Laporan Counter Service" :  "Counter Melaporkan Pendapatan Kepada Kasir";
-        $approval_data->status = isCoordinator() ? "approve" : "request";
+        $approval_data->status = "request";
         $approval_data->save();
 
 

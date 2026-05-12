@@ -7,6 +7,7 @@ use App\Models\ApprovalValidation;
 use App\Models\ValidationDeposit;
 use App\Services\ImageCompressionService;
 use App\Support\UploadStorage;
+use App\Support\UserDealerContext;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -57,9 +58,9 @@ class EditValidationDeposit extends EditRecord
                 'nominal_deposit' => $data['nominal_deposit'] ?? 0,
                 'date_published' => $data['date_published'],
                 'bank_name' => $data['bank_name'] ?? "",
-                'dealer_code' => $data['dealer_code'],
+                'dealer_code' => UserDealerContext::resolveDealerCode($data),
                 'transaction_type' => $data['transaction_type'],
-                'status' => isCoordinator() ? "approve" : 'request',
+                'status' => 'request',
                 'user_id' => Auth::user()->id,
                 'description' => $data['description'],
                 'neq_name' => $data['neq_name'] ?? "",
@@ -70,7 +71,7 @@ class EditValidationDeposit extends EditRecord
         $approval_validation->validation_deposits_id = $record->id;
         $approval_validation->description = isCoordinator() ? "Coordinator Melakukan revisi Validasi Setoran" : "Fin Ops Melaporkan Validasi Setoran Kepada Finance Spv";
         $approval_validation->user_id = Auth::user()->id;
-        $approval_validation->status = isCoordinator() ? "approve" : "request";
+        $approval_validation->status = "request";
         $approval_validation->save();
         // if (!empty($data['validate_images'])) {
         //     // hapus gambar lama

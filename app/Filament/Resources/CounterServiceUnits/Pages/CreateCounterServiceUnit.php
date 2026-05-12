@@ -9,6 +9,7 @@ use App\Models\UnitImage;
 use App\Models\UnitNominalDtl;
 use App\Services\ImageCompressionService;
 use App\Support\UploadStorage;
+use App\Support\UserDealerContext;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
@@ -47,13 +48,13 @@ class CreateCounterServiceUnit extends CreateRecord
         ]);
         $cs_unit = CsUnit::create([
             'date_published' => $data['date_published'],
-            'dealer_code' => $data['dealer_code'] ?? $data['dealer_code_single'],
+            'dealer_code' => UserDealerContext::resolveDealerCode($data),
             'total_income' => $data['total_income'] ?? 0,
             'total_expense' => $data['total_expense'] ?? 0,
             'user_id' => $user_id,
             'approval_type' => 'Cashier',
             'description' => $data['description'],
-            'status' => isCoordinator() ? "approve" : 'request',
+            'status' => 'request',
             'unit_nominal_dtl_id' => $unit_nominal_dtl->id
         ]);
 
@@ -61,7 +62,7 @@ class CreateCounterServiceUnit extends CreateRecord
         $approval_data->cs_units_id = $cs_unit->id;
         $approval_data->user_id = $user_id;
         $approval_data->description = isCoordinator() ? "Administrator Membuat Laporan Counter Service" : "Counter Melaporkan Pendapatan Kepada Kasir";
-        $approval_data->status = isCoordinator() ? "approve" : "request";
+        $approval_data->status = "request";
         $approval_data->save();
 
         foreach ($data['unit_images_upload'] ?? [] as $filePath) {

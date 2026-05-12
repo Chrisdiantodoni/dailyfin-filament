@@ -11,6 +11,7 @@ use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -133,11 +134,15 @@ class CounterServiceDepositForm
                         ->default(0)
                         ->readOnly(),
 
-                    TextInput::make('dealer_code_single')
-                        ->label('Dealer')->dehydrated()
+                    TextInput::make('dealer_display')
+                        ->label('Dealer')
                         ->default(fn() => UserDealerContext::firstDealerName())
                         ->hidden(fn() => UserDealerContext::hasMultipleDealers())
+                        ->dehydrated(false)
                         ->readOnly(),
+                    Hidden::make('dealer_code_single')
+                        ->default(fn() => UserDealerContext::firstDealerCode())
+                        ->dehydrated(),
                     Select::make('dealer_code')
                         ->required()
                         ->label('Dealer')

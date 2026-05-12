@@ -9,6 +9,7 @@ use App\Models\CashierDeposit;
 use App\Models\CashierDepositImage;
 use App\Services\ImageCompressionService;
 use App\Support\UploadStorage;
+use App\Support\UserDealerContext;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
@@ -42,7 +43,7 @@ class CreateCashierDeposit extends CreateRecord
     public function beforeCreate(): void
     {
         $data = $this->data;
-        $dealerCodes = $data['dealer_code'];
+        $dealerCodes = UserDealerContext::resolveDealerCode($data);
         $yesterdayTakeoutMoney = cashier_takeout_money::where('dealer_code', $dealerCodes)
             ->where('status', 'request')
             ->first();
@@ -84,7 +85,7 @@ class CreateCashierDeposit extends CreateRecord
     {
         $cashier_deposit = CashierDeposit::create([
             'date_published' => $data['date_published'],
-            'dealer_code' => $data['dealer_code'] ?? $data['dealer_code_single'],
+            'dealer_code' => UserDealerContext::resolveDealerCode($data),
             'user_id' => Auth::user()->id,
             'expense' => $data['expense'] ?? 0,
             'bank_deposit' => $data['bank_deposit'] ?? 0,
@@ -94,7 +95,7 @@ class CreateCashierDeposit extends CreateRecord
             'bank_name' => $data['bank_name'],
             'end_balance' => $data['end_balance'] ?? 0,
             'total_deposit' => $data['total_deposit'] ?? 0,
-            'status' => isCoordinator() ? 'approve' : 'request',
+            'status' => 'request',
             'approval_type' => 'FinOps',
             'description' => $data['description'],
         ]);
@@ -103,7 +104,7 @@ class CreateCashierDeposit extends CreateRecord
         $approval_cashier->cashier_deposit_id = $cashier_deposit->id;
         $approval_cashier->description = isCoordinator() ? 'Coordinator Melaporan Setoran Brankas' : 'Kasir Melaporkan Setoran Uang ke Brankas Kepada Finance Ops';
         $approval_cashier->user_id = Auth::user()->id;
-        $approval_cashier->status = isCoordinator() ? 'approve' : 'request';
+        $approval_cashier->status = 'request';
         $approval_cashier->save();
 
         foreach ($data['cashier_images'] ?? [] as $filePath) {

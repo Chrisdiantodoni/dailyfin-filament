@@ -8,6 +8,7 @@ use App\Models\ValidateImage;
 use App\Models\ValidationDeposit;
 use App\Services\ImageCompressionService;
 use App\Support\UploadStorage;
+use App\Support\UserDealerContext;
 use Carbon\Carbon;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
@@ -49,9 +50,9 @@ class CreateValidationDeposit extends CreateRecord
             'nominal_deposit' => $data['nominal_deposit'] ?? 0,
             'date_published' => $data['date_published'],
             'bank_name' => $data['bank_name'] ?? "",
-            'dealer_code' => $data['dealer_code'] ?? "",
+            'dealer_code' => UserDealerContext::resolveDealerCode($data),
             'transaction_type' => $data['transaction_type'],
-            'status' => isCoordinator() ? "approve" : 'request',
+            'status' => 'request',
             'deadline_time' => Carbon::now()->addDay()->setHour(14)->setMinute(0)->setSecond(0),
             'user_id' => Auth::user()->id,
             'description' => $data['description'],
@@ -63,7 +64,7 @@ class CreateValidationDeposit extends CreateRecord
         $approval_validation->validation_deposits_id = $validationDeposit->id;
         $approval_validation->description = isCoordinator() ? "Coordinator Melaporkan Validasi Setoran" : "Fin Ops Melaporkan Validasi Setoran Kepada Finance Spv";
         $approval_validation->user_id = Auth::user()->id;
-        $approval_validation->status = isCoordinator() ? "approve" : "request";
+        $approval_validation->status = "request";
         $approval_validation->save();
 
 

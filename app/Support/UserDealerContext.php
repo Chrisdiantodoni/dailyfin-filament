@@ -39,4 +39,22 @@ class UserDealerContext
     {
         return self::dealerUsers()->first()?->dealers?->dealer_code;
     }
+
+    public static function resolveDealerCode(array $data): ?string
+    {
+        $dealerCode = $data['dealer_code'] ?? $data['dealer_code_single'] ?? null;
+
+        if (blank($dealerCode)) {
+            return self::firstDealerCode();
+        }
+
+        $dealerUsers = self::dealerUsers();
+
+        $matchedDealer = $dealerUsers->first(function ($dealerUser) use ($dealerCode): bool {
+            return $dealerUser->dealers?->dealer_code === $dealerCode
+                || $dealerUser->dealers?->dealer_name === $dealerCode;
+        });
+
+        return $matchedDealer?->dealers?->dealer_code ?? $dealerCode;
+    }
 }

@@ -7,6 +7,7 @@ use App\Models\ApprovalMutateCash;
 use App\Models\CashMutate;
 use App\Services\ImageCompressionService;
 use App\Support\UploadStorage;
+use App\Support\UserDealerContext;
 use Carbon\Carbon;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
@@ -69,8 +70,8 @@ class EditCashMutate extends EditRecord
             'physical_cash' => $data['physical_cash'] ?? 0,
             'date_published' => $data['date_published'],
             'approval_type' => 'finSpv',
-            'status' => isCoordinator() ? "approve" : 'request',
-            'dealer_code' => $data['dealer_code'],
+            'status' => 'request',
+            'dealer_code' => UserDealerContext::resolveDealerCode($data),
             'description' => $data['description'] ?? "",
             'income' =>
             $data['income'] ?? 0,
@@ -106,7 +107,7 @@ class EditCashMutate extends EditRecord
         $approval_data = new ApprovalMutateCash();
         $approval_data->user_id = Auth::user()->id;
         $approval_data->description = isCoordinator() ? "Coordinator Melakukan Revisi" :  "Finance Ops Melakukan Revisi Laporan Mutasi Kas dan dikirim ke Finance Spv";
-        $approval_data->status = isCoordinator() ? "approve" : "request";
+        $approval_data->status = "request";
         $approval_data->cash_mutates_id = $record->id;
         $approval_data->save();
 
