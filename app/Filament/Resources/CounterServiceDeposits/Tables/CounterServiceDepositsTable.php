@@ -39,6 +39,7 @@ class CounterServiceDepositsTable
                 }),
                 TextColumn::make('roles')
                     ->label('Bagian')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->getStateUsing(fn($record) => $record->users->roles->pluck('name')->join(', '))
                     ->searchable(query: function ($query, $search) {
                         return $query->whereHas('users.roles', function ($q) use ($search) {
@@ -51,19 +52,24 @@ class CounterServiceDepositsTable
                         return $query->where('cash', 'like', "%{$search}%");
                     });
                 })
-                    ->getStateUsing(fn($record) => formatNumber($record->service_nominal_dtls->cash)),
+                    ->getStateUsing(fn($record) => formatNumber($record->service_nominal_dtls->cash))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('credit')->label('Setoran Transfer')->searchable(query: function ($query, $search) {
                     return $query->whereHas('service_nominal_dtls', function ($query) use ($search) {
                         return $query->where('transfer', 'like', "%{$search}%");
                     });
                 })
-                    ->getStateUsing(fn($record) => formatNumber($record->service_nominal_dtls->transfer)),
+                    ->getStateUsing(fn($record) => formatNumber($record->service_nominal_dtls->transfer))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('total_expense')->label('Nominal Pengeluaran')->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->total_expense)),
+                    ->getStateUsing(fn($record) => formatNumber($record->total_expense))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('total_income')->label('Total Disetor')->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->total_income)),
+                    ->getStateUsing(fn($record) => formatNumber($record->total_income))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('proof')
                     ->label('Bukti Transfer')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->getStateUsing(fn($record) => $record->service_images->count() > 0 ? 'Lihat' : 'Tidak ada Gambar.')
                     ->color(fn($record) => $record->service_images->count() > 0 ? 'primary' : 'gray')
                     ->action(

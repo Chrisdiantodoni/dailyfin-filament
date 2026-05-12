@@ -16,6 +16,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 class ValidationDepositResource extends Resource
 {
@@ -24,6 +25,8 @@ class ValidationDepositResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::MagnifyingGlassCircle;
 
     protected static ?string $recordTitleAttribute = 'Validasi Setoran';
+
+    protected static string | UnitEnum | null $navigationGroup = 'Setoran & Validasi';
 
     protected static ?int $navigationSort = 4;
 

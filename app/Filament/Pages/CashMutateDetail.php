@@ -212,7 +212,12 @@ class CashMutateDetail extends  ViewRecord implements HasTable
 
 
                 ])
-                ->columns(3)->columnSpanFull(),
+                ->columns([
+                    'default' => 1,
+                    'sm' => 1,
+                    'md' => 2,
+                    'lg' => 3,
+                ])->columnSpanFull(),
 
             Actions::make([
                 Action::make('confirm')
@@ -310,7 +315,11 @@ class CashMutateDetail extends  ViewRecord implements HasTable
                     $this->makeDenomGrid('denom_10k',  10000,  'Rp 10.000,00'),
                     $this->makeDenomGrid('denom_100',  100,    'Rp 100,00'),
                     $this->makeDenomGrid('denom_5k',   5000,   'Rp 5.000,00'),
-                ])->columns(2)->columnSpanFull(),
+                ])->columns([
+                    'default' => 1,
+                    'sm' => 1,
+                    'md' => 2,
+                ])->columnSpanFull(),
 
 
             TextEntry::make('total_physical_cash')

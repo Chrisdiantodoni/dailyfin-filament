@@ -2,18 +2,16 @@
 
 namespace App\Filament\Pages;
 
-use App\Filament\Widgets\ReportStat;
-use App\Filament\Widgets\StatsReportCashierDepositOverview;
-use App\Filament\Widgets\StatsReportCashierMutationOverview;
-use App\Filament\Widgets\StatsReportOverview;
-use App\Filament\Widgets\StatsReportValidationDepositOverview;
+use App\Filament\Widgets\BrankasOverview;
+use App\Filament\Widgets\MutasiOverview;
+use App\Filament\Widgets\TransactionTrendChart;
+use App\Filament\Widgets\ValidasiOverview;
 use App\Models\Dealer;
 use App\Models\DealerUser;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
-use Filament\Pages\Page;
-use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Pages\Dashboard\Actions\FilterAction;
+use Filament\Pages\Dashboard as BaseDashboard;
 use Filament\Pages\Dashboard\Concerns\HasFiltersAction;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,8 +26,12 @@ class Dashboard extends BaseDashboard
         return [
             FilterAction::make()
                 ->schema([
-                    DatePicker::make('startDate'),
-                    DatePicker::make('endDate'),
+                    DatePicker::make('startDate')
+                        ->label('Dari Tanggal')
+                        ->placeholder('Hari ini'),
+                    DatePicker::make('endDate')
+                        ->label('Sampai Tanggal')
+                        ->placeholder('Hari ini'),
                     Select::make('dealer_code')
                         ->label('Dealer')
                         ->options(
@@ -42,7 +44,7 @@ class Dashboard extends BaseDashboard
                         ->default(null)
                         ->searchable()
                         ->placeholder('Pilih Dealer')
-                        ->hidden(fn() => Auth::user()->dealer_users->count() === 1)
+                        ->hidden(fn () => Auth::user()->dealer_users->count() === 1)
                         ->live(),
                 ]),
         ];
@@ -51,18 +53,31 @@ class Dashboard extends BaseDashboard
     public function getHeaderWidgets(): array
     {
         return [
-            StatsReportCashierDepositOverview::class,
-            StatsReportCashierMutationOverview::class,
-            // StatsReportValidationDepositOverview::class,
+            BrankasOverview::class,
+            ValidasiOverview::class,
+            MutasiOverview::class,
+            TransactionTrendChart::class,
         ];
+    }
+
+    public function getFooterWidgets(): array
+    {
+        return [];
     }
 
     public function getHeaderWidgetsColumns(): array|int
     {
-        return 1;
+        return [
+            'default' => 1,
+            'lg' => 12,
+        ];
     }
-    protected function getGridColumns(): int
+
+    public function getFooterWidgetsColumns(): array|int
     {
-        return 3;
+        return [
+            'default' => 1,
+            'lg' => 12,
+        ];
     }
 }

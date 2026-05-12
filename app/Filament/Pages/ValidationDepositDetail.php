@@ -188,7 +188,12 @@ class ValidationDepositDetail extends ViewRecord implements HasTable
 
 
                 ])
-                ->columns(3)->columnSpanFull(),
+                ->columns([
+                    'default' => 1,
+                    'sm' => 1,
+                    'md' => 2,
+                    'lg' => 3,
+                ])->columnSpanFull(),
 
             Actions::make([
                 Action::make('confirm')->schema([
@@ -340,7 +345,11 @@ class ValidationDepositDetail extends ViewRecord implements HasTable
                 ->schema([
                     TextEntry::make('description')
                         ->columnSpanFull()
-                ])->columns(2)->columnSpanFull(),
+                ])->columns([
+                    'default' => 1,
+                    'sm' => 1,
+                    'md' => 2,
+                ])->columnSpanFull(),
 
         ]);
     }

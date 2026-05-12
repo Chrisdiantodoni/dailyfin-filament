@@ -142,7 +142,7 @@ class CashierDepositForm
         return $schema
             ->components([
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
                     'md' => 1
@@ -186,7 +186,7 @@ class CashierDepositForm
 
                     ])->columnSpanFull(),
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
                     'md' => 1
@@ -239,7 +239,7 @@ class CashierDepositForm
                             ->helperText('Nama Bank dalam huruf besar (ex. BNI/BCA/BRI)')
                     ])->columnSpanFull(),
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
                     'md' => 1
@@ -286,7 +286,7 @@ class CashierDepositForm
 
                     ])->columnSpanFull(),
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
                     'md' => 1
@@ -322,7 +322,7 @@ class CashierDepositForm
                             ->readOnly()
                     ])->columnSpanFull(),
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                 ])
                     ->schema([
                         Textarea::make('description')

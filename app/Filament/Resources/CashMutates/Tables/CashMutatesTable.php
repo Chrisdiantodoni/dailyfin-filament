@@ -29,19 +29,26 @@ class CashMutatesTable
                     });
                 }),
                 TextColumn::make('start_balance')->label('Saldo Awal')->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->start_balance)),
+                    ->getStateUsing(fn($record) => formatNumber($record->start_balance))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('income')->label('Nominal Penerimaan')->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->income)),
+                    ->getStateUsing(fn($record) => formatNumber($record->income))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('expense')->label('Nominal Pengeluaran')->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->expense)),
+                    ->getStateUsing(fn($record) => formatNumber($record->expense))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('end_balance')->label('Saldo Akhir')->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->end_balance)),
+                    ->getStateUsing(fn($record) => formatNumber($record->end_balance))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('invoice_nominal')->label('Kasbon Gantung')->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->invoice_nominal)),
+                    ->getStateUsing(fn($record) => formatNumber($record->invoice_nominal))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('physical_cash')->label('Fisik Kas')->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->physical_cash)),
+                    ->getStateUsing(fn($record) => formatNumber($record->physical_cash))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('proof')
                     ->label('Bukti Fisik Kas')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->getStateUsing(fn($record) => $record->cash_images->count() > 0 ? 'Lihat' : 'Tidak ada Gambar.')
                     ->color(fn($record) => $record->cash_images->count() > 0 ? 'primary' : 'gray')
                     ->action(
@@ -79,6 +86,7 @@ class CashMutatesTable
                     }),
                 TextColumn::make('created_at')
                     ->label('Status Deadline')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->formatStateUsing(function ($record) {
 
                         $createdAt = \Carbon\Carbon::parse($record->created_at);
@@ -100,6 +108,7 @@ class CashMutatesTable
                     }),
                 TextColumn::make('deadline_approval')
                     ->label('Status Deadline Approval')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->getStateUsing(fn($record) => $record->status_deadline)
                     ->formatStateUsing(function ($record) {
                         return $record->status_deadline == "Late"

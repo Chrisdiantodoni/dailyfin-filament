@@ -17,6 +17,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 class CashMutateResource extends Resource
 {
@@ -27,6 +28,7 @@ class CashMutateResource extends Resource
     protected static ?string $recordTitleAttribute = 'Mutasi Kas';
     protected static ?int $navigationSort = 4;
     protected static ?string $navigationLabel = 'Mutasi Kas';
+    protected static string | UnitEnum | null $navigationGroup = 'Mutasi & Kas';
 
     public static function form(Schema $schema): Schema
     {

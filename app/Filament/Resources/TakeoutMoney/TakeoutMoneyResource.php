@@ -17,6 +17,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 class TakeoutMoneyResource extends Resource
 {
@@ -27,6 +28,7 @@ class TakeoutMoneyResource extends Resource
     protected static ?string $recordTitleAttribute = 'cashier_takeout_money';
     protected static ?int $navigationSort = 3;
     protected static ?string $navigationLabel = 'Keluar Uang Brankas';
+    protected static string | UnitEnum | null $navigationGroup = 'Mutasi & Kas';
 
     public static function form(Schema $schema): Schema
     {

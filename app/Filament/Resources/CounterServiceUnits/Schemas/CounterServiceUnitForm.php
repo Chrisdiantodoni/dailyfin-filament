@@ -24,7 +24,7 @@ class CounterServiceUnitForm
     {
         return $schema->schema([
             Grid::make([
-                'default' => 3,
+                'default' => 1,
                 'sm' => 1,
                 'xl' => 3,
                 'md' => 1
@@ -49,7 +49,7 @@ class CounterServiceUnitForm
 
                 ])->columnSpanFull(),
             Grid::make([
-                'default' => 3,
+                'default' => 1,
                 'sm' => 1,
                 'xl' => 3,
                 'md' => 1
@@ -98,7 +98,7 @@ class CounterServiceUnitForm
                 ])->columnSpanFull(),
 
             Grid::make([
-                'default' => 3,
+                'default' => 1,
                 'sm' => 1,
                 'xl' => 3,
                 'md' => 1
@@ -147,7 +147,7 @@ class CounterServiceUnitForm
                 ])->columnSpanFull(),
 
             Grid::make([
-                'default' => 3,
+                'default' => 1,
             ])
                 ->schema([
                     Textarea::make('description')

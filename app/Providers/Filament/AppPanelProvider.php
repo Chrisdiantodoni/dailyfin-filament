@@ -19,7 +19,6 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Navigation\NavigationBuilder;
 use Filament\Navigation\NavigationGroup;
 use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
@@ -86,7 +85,20 @@ class AppPanelProvider extends PanelProvider
                 // PreventTakeoutMoney::class,
 
             ])
-            ->navigationGroups([])
+            ->navigationGroups([
+                NavigationGroup::make('Counter Service')
+                    ->icon('heroicon-o-wrench-screwdriver')
+                    ->collapsed(),
+                NavigationGroup::make('Setoran & Validasi')
+                    ->icon('heroicon-o-inbox-arrow-down')
+                    ->collapsed(),
+                NavigationGroup::make('Mutasi & Kas')
+                    ->icon('heroicon-o-banknotes')
+                    ->collapsed(),
+                NavigationGroup::make('Master Data')
+                    ->icon('heroicon-o-cog-6-tooth')
+                    ->collapsed(),
+            ])
             ->authMiddleware([
                 Authenticate::class,
             ])->routes(function () {

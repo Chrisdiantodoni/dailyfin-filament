@@ -26,6 +26,7 @@ class CounterServiceUnitResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
     protected static ?string $navigationLabel = 'Setoran Unit';
+    protected static string | UnitEnum | null $navigationGroup = 'Counter Service';
     protected static ?string $recordTitleAttribute = 'CsUnit';
 
     public static function getNavigationSort(): ?int

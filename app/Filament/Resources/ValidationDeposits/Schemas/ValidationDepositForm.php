@@ -25,7 +25,7 @@ class ValidationDepositForm
         return $schema
             ->components([
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
                     'md' => 1
@@ -43,7 +43,7 @@ class ValidationDepositForm
 
                     ])->columnSpanFull(),
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
                     'md' => 1
@@ -102,7 +102,7 @@ class ValidationDepositForm
 
                     ])->columnSpanFull(),
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
                     'md' => 1
@@ -159,7 +159,7 @@ class ValidationDepositForm
                         //     ),
                     ])->columnSpanFull(),
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                 ])
                     ->schema([
                         Textarea::make('description')

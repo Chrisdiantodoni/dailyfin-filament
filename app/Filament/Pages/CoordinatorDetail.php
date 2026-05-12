@@ -92,7 +92,10 @@ class CoordinatorDetail extends Page implements HasTable
     public function infolist(\Filament\Schemas\Schema $schema): \Filament\Schemas\Schema
     {
         return $schema->record($this->record)->schema([
-            Grid::make(2)->schema([
+            Grid::make([
+                'default' => 1,
+                'lg' => 2,
+            ])->schema([
                 Section::make('Informasi Umum')->schema([
                     TextEntry::make('date_published')
                         ->label('Tanggal')->date("d M Y"),
@@ -117,7 +120,10 @@ class CoordinatorDetail extends Page implements HasTable
 
 
                 ])
-                    ->columns(2),
+                    ->columns([
+                        'default' => 1,
+                        'md' => 2,
+                    ]),
 
 
                 Section::make('Saldo Selisih')->schema([
@@ -139,7 +145,10 @@ class CoordinatorDetail extends Page implements HasTable
                         ->label('Kas Gantung')
                         ->color(fn($state) => $state < 0 ? 'danger' : null), // merah jika minus
                 ])
-                    ->columns(2),
+                    ->columns([
+                        'default' => 1,
+                        'md' => 2,
+                    ]),
             ])->columnSpanFull(),
             Actions::make([
                 Action::make('confirm')
@@ -162,7 +171,10 @@ class CoordinatorDetail extends Page implements HasTable
             ])->extraAttributes([
                 'class' => 'flex gap-2 bg-transparent',
             ])->columnSpanFull(),
-            Grid::make(2)->schema([
+            Grid::make([
+                'default' => 1,
+                'lg' => 2,
+            ])->schema([
                 Section::make('Saldo Kasir')->schema([
                     TextEntry::make('start_balance_cashier')->money('Rp.', locale: 'ID')
                         ->label('Saldo Awal'),
@@ -173,7 +185,10 @@ class CoordinatorDetail extends Page implements HasTable
                         ->label('Kas Gantung'),
 
                 ])
-                    ->columns(2),
+                    ->columns([
+                        'default' => 1,
+                        'md' => 2,
+                    ]),
                 Section::make('Saldo GL')->schema([
                     TextEntry::make('start_balance_mutates')->money('Rp.', locale: 'ID')
                         ->label('Saldo Awal'),
@@ -184,7 +199,10 @@ class CoordinatorDetail extends Page implements HasTable
                         ->label('Kas Gantung'),
 
                 ])
-                    ->columns(2),
+                    ->columns([
+                        'default' => 1,
+                        'md' => 2,
+                    ]),
             ])->columnSpanFull()
 
         ]);

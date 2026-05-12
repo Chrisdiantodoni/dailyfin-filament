@@ -30,16 +30,17 @@ class CashierDepositsTable
                         $q->where('dealer_name', 'like', "%{$search}%");
                     });
                 }),
-                TextColumn::make('start_balance')->label('Saldo Awal')->getStateUsing(fn($record) => formatNumber($record->start_balance))->searchable(),
-                TextColumn::make('today_income')->label('Pendapatan Hari Ini')->getStateUsing(fn($record) => formatNumber($record->today_income))->searchable(),
-                TextColumn::make('expense')->label('Pengeluaran Hari Ini')->getStateUsing(fn($record) => formatNumber($record->expense))->searchable(),
-                TextColumn::make('bank_deposit')->label('Setoran ke Bank')->getStateUsing(fn($record) => formatNumber($record->bank_deposit))->searchable(),
-                TextColumn::make('end_balance')->label('Saldo Akhir')->getStateUsing(fn($record) => formatNumber($record->end_balance))->searchable(),
-                TextColumn::make('invoice')->label('Kasbon Gantung')->getStateUsing(fn($record) => formatNumber($record->invoice))->searchable(),
-                TextColumn::make('total_deposit')->label('Total Setoran ke Brankas')->getStateUsing(fn($record) => formatNumber($record->total_deposit))->searchable(),
-                TextColumn::make('bank_name')->label('Nama Bank')->searchable(),
+                TextColumn::make('start_balance')->label('Saldo Awal')->getStateUsing(fn($record) => formatNumber($record->start_balance))->searchable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('today_income')->label('Pendapatan Hari Ini')->getStateUsing(fn($record) => formatNumber($record->today_income))->searchable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('expense')->label('Pengeluaran Hari Ini')->getStateUsing(fn($record) => formatNumber($record->expense))->searchable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('bank_deposit')->label('Setoran ke Bank')->getStateUsing(fn($record) => formatNumber($record->bank_deposit))->searchable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('end_balance')->label('Saldo Akhir')->getStateUsing(fn($record) => formatNumber($record->end_balance))->searchable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('invoice')->label('Kasbon Gantung')->getStateUsing(fn($record) => formatNumber($record->invoice))->searchable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('total_deposit')->label('Total Setoran ke Brankas')->getStateUsing(fn($record) => formatNumber($record->total_deposit))->searchable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('bank_name')->label('Nama Bank')->searchable()->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('proof')
                     ->label('Bukti Transfer')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->getStateUsing(fn($record) => $record->cashier_images->count() > 0 ? 'Lihat' : 'Tidak ada Gambar.')
                     ->color(fn($record) => $record->cashier_images->count() > 0 ? 'primary' : 'gray')
                     ->action(
@@ -57,6 +58,7 @@ class CashierDepositsTable
                     ),
                 TextColumn::make('created_at')
                     ->label('Status Deadline Kasir')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable()
                     ->formatStateUsing(function ($record) {
                         $createdAt = Carbon::parse($record->created_at);

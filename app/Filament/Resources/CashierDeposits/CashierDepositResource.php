@@ -29,6 +29,8 @@ class CashierDepositResource extends Resource
     protected static ?string $recordTitleAttribute = 'CashierDeposit';
     protected static ?string $navigationLabel = 'Setoran Brankas';
 
+    protected static string | UnitEnum | null $navigationGroup = 'Setoran & Validasi';
+
     protected static ?int $navigationSort = 3;
     // protected static string | UnitEnum | null $navigationLabel = 'Setoran Harian Brankas';
     public static function canAccess(): bool

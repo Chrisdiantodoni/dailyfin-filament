@@ -5,59 +5,174 @@
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
 
-/* Rich Editor Styles */
-/* blockquote {
-    border-left: 4px solid rgb(var(--primary-500));
-    margin: 1.5em 0;
-    padding-left: 1em;
-    color: rgb(107 114 128);
-    font-style: italic;
+/* Dashboard rhythm */
+.fi-page.fi-resource-dashboard,
+.fi-page:has(.fi-page-header-widgets) {
+    --dashboard-panel: rgb(17 24 39 / 0.78);
+    --dashboard-panel-soft: rgb(31 41 55 / 0.56);
 }
 
-ul,
-ol {
-    padding-left: 1.5em;
+.fi-page-header-heading {
+    letter-spacing: 0;
 }
 
-ul {
-    list-style-type: disc;
+.fi-page-header-widgets .fi-wi-widget,
+.fi-page-footer-widgets .fi-wi-widget {
+    height: 100%;
+    min-width: 0;
 }
 
-ol {
-    list-style-type: decimal;
+.fi-page-header-widgets .fi-section,
+.fi-page-footer-widgets .fi-section {
+    height: 100%;
+    overflow: clip;
+    border: 1px solid rgb(148 163 184 / 0.14);
+    background:
+        linear-gradient(135deg, rgb(15 23 42 / 0.86), rgb(17 24 39 / 0.72)),
+        var(--dashboard-panel);
+    box-shadow: 0 18px 45px rgb(0 0 0 / 0.18);
 }
 
-li {
-    margin: 0.5em 0;
+.fi-page-header-widgets .fi-section-header,
+.fi-page-footer-widgets .fi-section-header {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid rgb(148 163 184 / 0.1);
 }
 
-h1 {
-    font-size: 2em;
-    font-weight: 600;
-    margin: 1em 0 0.5em 0;
+.fi-page-header-widgets .fi-section-description,
+.fi-page-footer-widgets .fi-section-description {
+    max-width: 58rem;
+    color: rgb(203 213 225 / 0.82);
+    line-height: 1.45;
 }
-h2 {
-    font-size: 1.5em;
-    font-weight: 600;
-    margin: 1em 0 0.5em 0;
+
+.fi-page-header-widgets .fi-section-heading,
+.fi-page-footer-widgets .fi-section-heading {
+    font-size: 0.95rem;
+    font-weight: 700;
 }
-h3 {
-    font-size: 1.25em;
-    font-weight: 600;
-    margin: 1em 0 0.5em 0;
+
+.fi-page-header-widgets .fi-wi-stats-overview .fi-sc-section-content {
+    height: 100%;
 }
-h4 {
-    font-size: 1.1em;
-    font-weight: 600;
-    margin: 1em 0 0.5em 0;
+
+.fi-page-header-widgets .fi-wi-stats-overview .fi-wi-stats-overview-stats-ctn {
+    gap: 1rem;
 }
-h5 {
-    font-size: 1em;
-    font-weight: 600;
-    margin: 1em 0 0.5em 0;
+
+.fi-wi-stats-overview-stat {
+    min-height: 6.35rem;
+    min-width: 0;
+    border-radius: 0.75rem;
+    border: 1px solid rgb(148 163 184 / 0.12);
+    background: linear-gradient(180deg, rgb(30 41 59 / 0.7), rgb(15 23 42 / 0.52));
+    transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
 }
-h6 {
-    font-size: 0.9em;
-    font-weight: 600;
-    margin: 1em 0 0.5em 0;
-} */
+
+.fi-wi-stats-overview-stat:hover {
+    transform: translateY(-2px);
+    border-color: rgb(251 191 36 / 0.38);
+    background: linear-gradient(180deg, rgb(30 41 59 / 0.86), rgb(15 23 42 / 0.64));
+}
+
+.fi-wi-stats-overview-stat:nth-child(1) {
+    border-color: rgb(56 189 248 / 0.2);
+}
+
+.fi-wi-stats-overview-stat:nth-child(2) {
+    border-color: rgb(251 191 36 / 0.22);
+}
+
+.fi-wi-stats-overview-stat:nth-child(3) {
+    border-color: rgb(52 211 153 / 0.22);
+}
+
+.fi-wi-stats-overview-stat:nth-child(4) {
+    border-color: rgb(251 113 133 / 0.22);
+}
+
+.fi-wi-stats-overview-stat-value {
+    font-size: clamp(1.5rem, 2vw, 2rem);
+    line-height: 1.05;
+}
+
+.fi-wi-stats-overview-stat-description {
+    max-width: 100%;
+    color: rgb(148 163 184) !important;
+    font-size: 0.75rem;
+    line-height: 1.25;
+}
+
+.fi-wi-chart {
+    min-height: 22rem;
+}
+
+.fi-wi-chart .fi-section-content {
+    min-height: 18rem;
+}
+
+.df-trend-widget .fi-section-content {
+    position: relative;
+}
+
+.df-trend-empty {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    text-align: left;
+    pointer-events: none;
+}
+
+.df-trend-widget canvas {
+    min-height: 18rem;
+}
+
+.fi-page-footer-widgets table {
+    min-width: 100%;
+}
+
+.fi-page-footer-widgets thead th {
+    white-space: nowrap;
+    color: rgb(203 213 225);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0;
+}
+
+.fi-page-footer-widgets tbody td {
+    vertical-align: middle;
+}
+
+@media (max-width: 640px) {
+    .fi-page-header-widgets .fi-section-header,
+    .fi-page-footer-widgets .fi-section-header {
+        padding-bottom: 0.65rem;
+    }
+
+    .fi-wi-stats-overview-stat {
+        min-height: 5.75rem;
+    }
+
+    .fi-wi-chart {
+        min-height: 20rem;
+    }
+
+    .df-trend-widget canvas {
+        min-height: 16rem;
+    }
+
+    .df-trend-empty {
+        align-items: flex-start;
+        padding-top: 3rem;
+        text-align: center;
+        flex-direction: column;
+    }
+
+    .fi-page-footer-widgets .fi-section-content {
+        padding-inline: 0.75rem;
+    }
+}

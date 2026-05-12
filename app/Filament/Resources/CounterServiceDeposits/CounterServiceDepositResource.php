@@ -27,6 +27,7 @@ class CounterServiceDepositResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'CsServiceSparepart';
     protected static ?string $navigationLabel = 'Setoran Sparepart & Jasa';
+    protected static string | UnitEnum | null $navigationGroup = 'Counter Service';
     public static function canAccess(): bool
     {
         return canAny([

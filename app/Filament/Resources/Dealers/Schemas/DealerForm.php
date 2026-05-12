@@ -22,6 +22,11 @@ class DealerForm
                     "SUMUT" => "SUMUT",
                     "RIAU" => "RIAU",
                 ])
-            ])->columns(3);
+            ])->columns([
+                'default' => 1,
+                'sm' => 1,
+                'md' => 2,
+                'lg' => 3,
+            ]);
     }
 }

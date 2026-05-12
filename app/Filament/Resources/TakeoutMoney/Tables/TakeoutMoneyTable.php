@@ -31,19 +31,24 @@ class TakeoutMoneyTable
                 }),
                 TextColumn::make('revised_finance_nominal')->label('Saldo Revisi')
                     ->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->revised_finance_nominal)),
+                    ->getStateUsing(fn($record) => formatNumber($record->revised_finance_nominal))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('end_balance')->label('Jumlah Uang di Brankas')
                     ->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->end_balance)),
+                    ->getStateUsing(fn($record) => formatNumber($record->end_balance))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('money_put')->label('Jumlah Uang Titipan')
                     ->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->money_put)),
+                    ->getStateUsing(fn($record) => formatNumber($record->money_put))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('takeout_nominal')->label('Total Uang yang Dikeluarkan')
                     ->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->takeout_nominal)),
+                    ->getStateUsing(fn($record) => formatNumber($record->takeout_nominal))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('revised_ops_nominal')->label('Revisi Jumlah Uang Dikeluarkan')
                     ->searchable()
-                    ->getStateUsing(fn($record) => formatNumber($record->revised_ops_nominal)),
+                    ->getStateUsing(fn($record) => formatNumber($record->revised_ops_nominal))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('status')
                     ->label('Status')
                     ->formatStateUsing(fn(string $state): string => match ($state) {

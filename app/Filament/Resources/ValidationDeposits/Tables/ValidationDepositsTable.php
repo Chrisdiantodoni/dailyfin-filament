@@ -29,14 +29,15 @@ class ValidationDepositsTable
                         $q->where('dealer_name', 'like', "%{$search}%");
                     });
                 }),
-                TextColumn::make('neq_name')->label('NEQ')->searchable(),
-                TextColumn::make('customer_name')->label('Nama Penyetor')->searchable(),
+                TextColumn::make('neq_name')->label('NEQ')->searchable()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('customer_name')->label('Nama Penyetor')->searchable()->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('nominal_deposit')->label('Nominal Penerimaan')->searchable()
                     ->getStateUsing(fn($record) => formatNumber($record->nominal_deposit)),
-                TextColumn::make('deposit_date')->label('Tanggal Setoran')->searchable()->date(),
-                TextColumn::make('transaction_type')->label('Jenis Transaksi')->searchable(),
+                TextColumn::make('deposit_date')->label('Tanggal Setoran')->searchable()->date()->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('transaction_type')->label('Jenis Transaksi')->searchable()->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('proof')
                     ->label('Bukti Setoran')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->getStateUsing(fn($record) => $record->validate_imgs->count() > 0 ? 'Lihat' : 'Tidak ada Gambar.')
                     ->color(fn($record) => $record->validate_imgs->count() > 0 ? 'primary' : 'gray')
                     ->action(
@@ -74,6 +75,7 @@ class ValidationDepositsTable
                     }),
                 TextColumn::make('deadline_submit')
                     ->label('Status Deadline Submit')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->getStateUsing(function ($record) {
                         // return "$record->created_at, $record->date_published";
                         return isLateValidateDeposit($record->created_at, $record->date_published)
@@ -98,6 +100,7 @@ class ValidationDepositsTable
                     }),
                 TextColumn::make('deadline_approval')
                     ->label('Status Deadline Approval')
+                    ->toggleable(isToggledHiddenByDefault: true)
                     ->getStateUsing(fn($record) => $record->status_deadline)
                     ->formatStateUsing(function ($record) {
                         return $record->status_deadline == "Late"

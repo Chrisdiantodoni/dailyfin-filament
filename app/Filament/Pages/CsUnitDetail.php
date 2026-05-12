@@ -138,7 +138,12 @@ class CsUnitDetail extends ViewRecord implements HasTable
                         ->money('Rp.', locale: 'ID'),
 
                 ])
-                ->columns(3)->columnSpanFull(),
+                ->columns([
+                    'default' => 1,
+                    'sm' => 1,
+                    'md' => 2,
+                    'lg' => 3,
+                ])->columnSpanFull(),
 
             Actions::make([
                 Action::make('confirm')

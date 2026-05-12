@@ -22,6 +22,7 @@ use Filament\Tables\Table;
 use Illuminate\Contracts\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Excel;
 
@@ -30,6 +31,7 @@ class Coordinator extends Page implements HasTable
     use InteractsWithTable;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::ClipboardDocumentCheck;
+    protected static string | UnitEnum | null $navigationGroup = 'Mutasi & Kas';
     protected static ?int $navigationSort = 5;
 
     public function getBreadcrumbs(): array
@@ -202,25 +204,31 @@ class Coordinator extends Page implements HasTable
                 // Blok Saldo Harian Kasir
                 TextColumn::make('start_balance_cashier')
                     ->label('Saldo Awal')->label("Saldo Awal Kasir")->searchable()
-                    ->money('idr', true),
+                    ->money('idr', true)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('end_balance_cashier')->label("Saldo Akhir Kasir")->searchable()
                     ->label('Saldo Akhir')
-                    ->money('idr', true),
+                    ->money('idr', true)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('invoice_cashier')->label("Kas Gantung Kasir")->searchable()
                     ->label('Kas Gantung')
-                    ->money('idr', true),
+                    ->money('idr', true)
+                    ->toggleable(isToggledHiddenByDefault: true),
 
 
                 // Blok Saldo GL (mutasi)
                 TextColumn::make('start_balance_mutates')->label("Saldo Awal GL")->searchable()
                     ->label('Saldo Awal')
-                    ->money('idr', true),
+                    ->money('idr', true)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('end_balance_mutates')->label("Saldo Akhir GL")->searchable()
                     ->label('Saldo Akhir')
-                    ->money('idr', true),
+                    ->money('idr', true)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('invoice_mutates')->label("Kas Gantung Kasir")->searchable()
                     ->label('Kas Gantung')
-                    ->money('idr', true),
+                    ->money('idr', true)
+                    ->toggleable(isToggledHiddenByDefault: true),
 
 
                 // Blok Selisih
@@ -228,18 +236,21 @@ class Coordinator extends Page implements HasTable
                     ->label("Selisih Saldo Awal")
                     ->color(fn($state) => $state < 0 ? 'danger' : null) // merah jika minus
                     ->getStateUsing(fn($record) => $record->start_balance_cashier - $record->start_balance_mutates)
-                    ->money('idr', true),
+                    ->money('idr', true)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('selisih_akhir')
                     ->label('Selisih Saldo Akhir')
                     ->color(fn($state) => $state < 0 ? 'danger' : null) // merah jika minus
                     ->getStateUsing(fn($record) => $record->end_balance_cashier - $record->end_balance_mutates)
-                    ->money('idr', true),
+                    ->money('idr', true)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('selisih_invoice')
                     ->label('Selisih Kas Gantung')
                     ->color(fn($state) => $state < 0 ? 'danger' : null) // merah jika minus
 
                     ->getStateUsing(fn($record) => $record->invoice_cashier - $record->invoice_mutates)
-                    ->money('idr', true),
+                    ->money('idr', true)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('coordinator_status') // ✅ matches alias, not relationship dot notation
                     ->label('Status')
                     ->getStateUsing(fn($record) => $record->coordinator_status ?: 'request') // ✅ fixed: state → coordinator_status

@@ -1,19 +1,6 @@
 import Echo from "laravel-echo";
-// import Pusher from "pusher-js";
 
-// window.Pusher = Pusher;
-
-// window.Echo = new Echo({
-//     broadcaster: "pusher",
-//     key: import.meta.env.VITE_PUSHER_APP_KEY,
-//     cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
-//     forceTLS: true,
-//     encrypted: true,
-// });
-
-// Debug: Pastikan Echo terload
-console.log("Echo loaded:", typeof Echo);
-
+// Reverb Echo setup
 window.Echo = new Echo({
     broadcaster: "reverb",
     key: import.meta.env.VITE_REVERB_APP_KEY || "app_key_abcdef123456",
@@ -23,21 +10,28 @@ window.Echo = new Echo({
     forceTLS: false,
     enabledTransports: ["ws", "wss"],
 });
-const userId = document.querySelector('meta[name="user-id"]').content;
 
-console.log({ userId });
-window.Echo.private(`App.Models.User.${window.userId}`).listen(
-    ".NotificationSent",
-    (e) => {
-        new FilamentNotification()
-            .title(e?.title)
-            .body(e?.body)
-            .success()
-            .send();
-        console.log("Notif Laravel:", e);
-    }
-);
+// Safe meta access
+const metaUserId = document.querySelector('meta[name="user-id"]');
+if (metaUserId) {
+    const userId = metaUserId.content;
+    console.log({ userId });
+    window.Echo.private(`App.Models.User.${userId}`).listen(
+        ".NotificationSent",
+        (e) => {
+            if (typeof FilamentNotification !== "undefined") {
+                new FilamentNotification()
+                    .title(e?.title)
+                    .body(e?.body)
+                    .success()
+                    .send();
+            }
+            console.log("Notif Laravel:", e);
+        }
+    );
+}
 
+// Upload button helpers
 document.addEventListener("livewire-upload-start", () => {
     const button = document.getElementById("create-button");
     if (button) {
@@ -62,6 +56,7 @@ document.addEventListener("livewire-upload-error", () => {
     }
 });
 
+// Cash calculation helpers (only on pages with these fields)
 document.addEventListener("DOMContentLoaded", function () {
     var expense = document.getElementById("expense");
     var bank_deposit = document.getElementById("bank_deposit");
@@ -70,9 +65,11 @@ document.addEventListener("DOMContentLoaded", function () {
     var today_income = document.getElementById("today_income");
     var end_balance = document.getElementById("end_balance");
     var total_deposit = document.getElementById("total_deposit");
-    var grand_total = document.getElementById("grand_total");
 
-    // Function to update total income
+    if (!expense || !bank_deposit || !invoice_nominal || !start_balance || !today_income || !end_balance || !total_deposit) {
+        return; // Skip if not on cash form page
+    }
+
     function updateTotalIncome() {
         var expenseValue = parseFloat(expense.value) || 0;
         var bank_depositValue = parseFloat(bank_deposit.value) || 0;
@@ -92,10 +89,10 @@ document.addEventListener("DOMContentLoaded", function () {
         total_deposit.value =
             total_depositValue.toLocaleString("en-US").replace(/,/g, ".") +
             ",00";
-        console.log({ end_balance });
+
         var isBelowZero = end_balanceValue < 0 || total_depositValue < 0;
-        // document.getElementById("confirm").disabled = isBelowZero;
     }
+
     expense.addEventListener("input", updateTotalIncome);
     bank_deposit.addEventListener("input", updateTotalIncome);
     invoice_nominal.addEventListener("input", updateTotalIncome);

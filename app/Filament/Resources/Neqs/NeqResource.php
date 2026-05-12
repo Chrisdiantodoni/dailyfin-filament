@@ -15,6 +15,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 class NeqResource extends Resource
 {
@@ -24,6 +25,7 @@ class NeqResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'NEQ';
     protected static ?int $navigationSort = 6;
+    protected static string | UnitEnum | null $navigationGroup = 'Master Data';
     public static function canAccess(): bool
     {
         /** @var \App\Models\User&\Spatie\Permission\Traits\HasRoles $user */

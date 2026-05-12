@@ -17,6 +17,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
+use UnitEnum;
 
 class UsersResource extends Resource
 {
@@ -26,6 +27,7 @@ class UsersResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'user';
     protected static ?int $navigationSort = 6;
+    protected static string | UnitEnum | null $navigationGroup = 'Master Data';
     public static function canAccess(): bool
     {
         /** @var \App\Models\User&\Spatie\Permission\Traits\HasRoles $user */

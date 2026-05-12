@@ -161,7 +161,10 @@ class UsersForm
                                         ->relationship('permissions', 'name')
                                         ->options($permissions->pluck('name', 'id'))
                                         ->reactive()
-                                        ->columns(2)
+                                        ->columns([
+                                            'default' => 1,
+                                            'md' => 2,
+                                        ])
                                         ->bulkToggleable()
                                         ->afterStateUpdated(function ($state, Set $set) use ($group, $permissions) {
                                             $allSelected = count($state ?? []) === $permissions->count();

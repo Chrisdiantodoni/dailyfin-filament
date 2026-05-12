@@ -142,7 +142,12 @@ class CashierDepositDetail extends  ViewRecord implements HasTable
 
 
                 ])
-                ->columns(3)->columnSpanFull(),
+                ->columns([
+                    'default' => 1,
+                    'sm' => 1,
+                    'md' => 2,
+                    'lg' => 3,
+                ])->columnSpanFull(),
 
             Actions::make([
 

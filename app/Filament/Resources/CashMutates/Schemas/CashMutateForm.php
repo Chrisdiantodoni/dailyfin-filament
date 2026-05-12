@@ -72,7 +72,7 @@ class CashMutateForm
         return $schema
             ->components([
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
                     'md' => 1
@@ -119,7 +119,7 @@ class CashMutateForm
 
                     ])->columnSpanFull(),
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
                     'md' => 1
@@ -164,7 +164,7 @@ class CashMutateForm
 
                     ])->columnSpanFull(),
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
                     'md' => 1
@@ -238,8 +238,10 @@ class CashMutateForm
                                 'class' => 'flex w-full h-full grid'
                             ])
                             ->schema([
-                                Grid::make(2)
-                                    ->schema([
+                                Grid::make([
+                                    'default' => 1,
+                                    'lg' => 2,
+                                ])->schema([
                                         Grid::make(1)
                                             ->extraAttributes([
                                                 'class' => 'lg:mr-5 mr-0'
@@ -722,7 +724,10 @@ class CashMutateForm
                             ->columnSpanFull(),
                     ])
                     ->columnSpanFull(),
-                Grid::make(4)
+                Grid::make([
+                    'default' => 1,
+                    'md' => 4,
+                ])
                     ->schema([
                         TextEntry::make('total_label')
                             ->label('Total')
@@ -742,7 +747,7 @@ class CashMutateForm
                             ]),
                     ]),
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
                     'md' => 1

@@ -60,7 +60,7 @@ class TakeoutMoneyForm
         return $schema
             ->components([
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
                     'md' => 1
@@ -106,7 +106,7 @@ class TakeoutMoneyForm
 
                     ])->columnSpanFull(),
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                     'sm' => 1,
                     'xl' => 3,
                     'md' => 1
@@ -167,7 +167,7 @@ class TakeoutMoneyForm
                             ->stripCharacters("."),
                     ])->columnSpanFull(),
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                 ])
                     ->schema([
                         TextInput::make('revised_ops_nominal')
@@ -179,7 +179,7 @@ class TakeoutMoneyForm
 
                     ])->columnSpanFull()->hidden(fn($operation) => $operation != 'edit'),
                 Grid::make([
-                    'default' => 3,
+                    'default' => 1,
                 ])
                     ->schema([
                         Textarea::make('description')
