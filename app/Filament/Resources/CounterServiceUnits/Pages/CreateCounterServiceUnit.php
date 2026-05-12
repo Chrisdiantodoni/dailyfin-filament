@@ -54,15 +54,15 @@ class CreateCounterServiceUnit extends CreateRecord
             'user_id' => $user_id,
             'approval_type' => 'Cashier',
             'description' => $data['description'],
-            'status' => 'request',
+            'status' => isAuditCoordinator() ? "approve" : 'request',
             'unit_nominal_dtl_id' => $unit_nominal_dtl->id
         ]);
 
         $approval_data = new ApprovalCsCashiersUnit();
         $approval_data->cs_units_id = $cs_unit->id;
         $approval_data->user_id = $user_id;
-        $approval_data->description = isCoordinator() ? "Administrator Membuat Laporan Counter Service" : "Counter Melaporkan Pendapatan Kepada Kasir";
-        $approval_data->status = "request";
+        $approval_data->description = isAuditCoordinator() ? "Administrator Membuat Laporan Counter Service" : "Counter Melaporkan Pendapatan Kepada Kasir";
+        $approval_data->status = isAuditCoordinator() ? "approve" : "request";
         $approval_data->save();
 
         foreach ($data['unit_images_upload'] ?? [] as $filePath) {

@@ -70,7 +70,7 @@ class EditCashMutate extends EditRecord
             'physical_cash' => $data['physical_cash'] ?? 0,
             'date_published' => $data['date_published'],
             'approval_type' => 'finSpv',
-            'status' => 'request',
+            'status' => isAuditCoordinator() ? "approve" : 'request',
             'dealer_code' => UserDealerContext::resolveDealerCode($data),
             'description' => $data['description'] ?? "",
             'income' =>
@@ -106,8 +106,8 @@ class EditCashMutate extends EditRecord
 
         $approval_data = new ApprovalMutateCash();
         $approval_data->user_id = Auth::user()->id;
-        $approval_data->description = isCoordinator() ? "Coordinator Melakukan Revisi" :  "Finance Ops Melakukan Revisi Laporan Mutasi Kas dan dikirim ke Finance Spv";
-        $approval_data->status = "request";
+        $approval_data->description = isAuditCoordinator() ? "Coordinator Melakukan Revisi" :  "Finance Ops Melakukan Revisi Laporan Mutasi Kas dan dikirim ke Finance Spv";
+        $approval_data->status = isAuditCoordinator() ? "approve" : "request";
         $approval_data->cash_mutates_id = $record->id;
         $approval_data->save();
 

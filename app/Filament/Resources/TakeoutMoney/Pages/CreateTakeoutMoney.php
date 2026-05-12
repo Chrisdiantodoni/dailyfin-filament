@@ -59,14 +59,14 @@ class CreateTakeoutMoney extends CreateRecord
         $cashier_takeout->end_balance = $data['end_balance'] ?? 0;
         $cashier_takeout->money_put = $data['money_put'] ?? 0;
         $cashier_takeout->is_revised = false;
-        $cashier_takeout->status = "request";
+        $cashier_takeout->status = isAuditCoordinator() ? "approve" : "request";
         $cashier_takeout->description = $data['description'];
         $cashier_takeout->approval_type = 'FinOps';
         $cashier_takeout->save();
         $approval_takeout_money = new approval_takeout_money();
         $approval_takeout_money->user_id = Auth::user()->id;
-        $approval_takeout_money->description = isCoordinator() ? "Administrator melaporkan Pengeluaran Uang" : "Kasir melaporkan Pengeluaran uang kepada Finance Ops";
-        $approval_takeout_money->status = "request";
+        $approval_takeout_money->description = isAuditCoordinator() ? "Administrator melaporkan Pengeluaran Uang" : "Kasir melaporkan Pengeluaran uang kepada Finance Ops";
+        $approval_takeout_money->status = isAuditCoordinator() ? "approve" : "request";
         $approval_takeout_money->cashier_takeouts_id = $cashier_takeout->id;
         $approval_takeout_money->save();
 

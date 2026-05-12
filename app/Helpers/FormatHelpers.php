@@ -62,6 +62,13 @@ if (!function_exists('isCoordinator')) {
     }
 }
 
+if (!function_exists('isAuditCoordinator')) {
+    function isAuditCoordinator(): bool
+    {
+        return Auth::user()?->hasRole(\App\Enums\Role::COORDINATOR->value) ?? false;
+    }
+}
+
 
 if (! function_exists('isLateValidateDeposit')) {
     /**

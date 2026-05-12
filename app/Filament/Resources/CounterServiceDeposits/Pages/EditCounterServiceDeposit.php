@@ -85,7 +85,7 @@ class EditCounterServiceDeposit extends EditRecord
                 'user_id' => $user_id,
                 'approval_type' => 'Cashier',
                 'description' => $data['description'],
-                'status' => 'request',
+                'status' => isAuditCoordinator() ? "approve" : 'request',
             ]);
         $service_nominal_dtl = ServiceNominalDtl::find($record->service_sparepart_dtl);
         ServiceNominalDtl::find($service_nominal_dtl->id)->update([
@@ -97,7 +97,7 @@ class EditCounterServiceDeposit extends EditRecord
         $approval_data->cs_service_spareparts_id = $record['id'];
         $approval_data->user_id = Auth::user()->id;
         $approval_data->description = 'Counter Melakukan Revisi dan Mengajukan Kembali Kepada Kasir';
-        $approval_data->status = 'request';
+        $approval_data->status = isAuditCoordinator() ? 'approve' : 'request';
         $approval_data->save();
         // --- LOGIKA IMAGE SYNC ---
 

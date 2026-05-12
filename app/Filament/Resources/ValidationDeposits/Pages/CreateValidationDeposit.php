@@ -52,7 +52,7 @@ class CreateValidationDeposit extends CreateRecord
             'bank_name' => $data['bank_name'] ?? "",
             'dealer_code' => UserDealerContext::resolveDealerCode($data),
             'transaction_type' => $data['transaction_type'],
-            'status' => 'request',
+            'status' => isAuditCoordinator() ? "approve" : 'request',
             'deadline_time' => Carbon::now()->addDay()->setHour(14)->setMinute(0)->setSecond(0),
             'user_id' => Auth::user()->id,
             'description' => $data['description'],
@@ -62,9 +62,9 @@ class CreateValidationDeposit extends CreateRecord
 
         $approval_validation = new ApprovalValidation();
         $approval_validation->validation_deposits_id = $validationDeposit->id;
-        $approval_validation->description = isCoordinator() ? "Coordinator Melaporkan Validasi Setoran" : "Fin Ops Melaporkan Validasi Setoran Kepada Finance Spv";
+        $approval_validation->description = isAuditCoordinator() ? "Coordinator Melaporkan Validasi Setoran" : "Fin Ops Melaporkan Validasi Setoran Kepada Finance Spv";
         $approval_validation->user_id = Auth::user()->id;
-        $approval_validation->status = "request";
+        $approval_validation->status = isAuditCoordinator() ? "approve" : "request";
         $approval_validation->save();
 
 

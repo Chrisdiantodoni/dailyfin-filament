@@ -56,13 +56,13 @@ class EditTakeoutMoney extends EditRecord
             'money_put' => $data['money_put'],
             'is_revised' => true,
             'approval_type' => 'FinOps',
-            'status' => 'request',
+            'status' => isAuditCoordinator() ? "approve" : 'request',
         ]);
 
         $approval_takeout_money = new approval_takeout_money();
         $approval_takeout_money->user_id = Auth::user()->id;
-        $approval_takeout_money->description =  isCoordinator() ? 'Administrator melaporkan pengeluaran uang' : "Kasir Mengajukan Kembali Laporan Pengeluaran Uang Kepada Finance Ops";
-        $approval_takeout_money->status = "request";
+        $approval_takeout_money->description =  isAuditCoordinator() ? 'Administrator melaporkan pengeluaran uang' : "Kasir Mengajukan Kembali Laporan Pengeluaran Uang Kepada Finance Ops";
+        $approval_takeout_money->status = isAuditCoordinator() ? "approve" : "request";
         $approval_takeout_money->cashier_takeouts_id = $record->id;
         $approval_takeout_money->save();
         return $record->fresh();

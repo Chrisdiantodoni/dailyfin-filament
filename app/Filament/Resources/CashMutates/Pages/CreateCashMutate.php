@@ -101,7 +101,7 @@ class CreateCashMutate extends CreateRecord
             'deadline_time' => Carbon::now()->addDay()->setHour(14)->setMinute(0)->setSecond(0),
 
             'approval_type' => 'finSpv',
-            'status' => 'request',
+            'status' => isAuditCoordinator() ? "approve" : 'request',
             'dealer_code' => UserDealerContext::resolveDealerCode($data),
             'description' => $data['description'] ?? "",
             'income' =>
@@ -137,8 +137,8 @@ class CreateCashMutate extends CreateRecord
 
         $approval_data = new ApprovalMutateCash();
         $approval_data->user_id = Auth::user()->id;
-        $approval_data->description = isCoordinator() ? "Coordinator Melaporkan Laporan Mutasi Kas" : "Finance Ops Melaporkan Laporan Mutasi Kas dikirim ke Finance Spv";
-        $approval_data->status = "request";
+        $approval_data->description = isAuditCoordinator() ? "Coordinator Melaporkan Laporan Mutasi Kas" : "Finance Ops Melaporkan Laporan Mutasi Kas dikirim ke Finance Spv";
+        $approval_data->status = isAuditCoordinator() ? "approve" : "request";
         $approval_data->cash_mutates_id = $cash_mutate->id;
         $approval_data->save();
 

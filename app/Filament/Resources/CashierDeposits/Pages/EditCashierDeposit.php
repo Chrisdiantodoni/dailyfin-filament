@@ -82,7 +82,7 @@ class EditCashierDeposit extends EditRecord
                 'bank_name' => $data['bank_name'],
                 'end_balance' => $data['end_balance'],
                 'total_deposit' => $data['total_deposit'],
-                'status' => 'request',
+                'status' => isAuditCoordinator() ? 'approve' : 'request',
                 'approval_type' => 'FinOps',
                 'description' => $data['description']
             ]);
@@ -91,8 +91,8 @@ class EditCashierDeposit extends EditRecord
         $approval_data = new ApprovalCashierDeposit();
         $approval_data->cashier_deposit_id = $record['id'];
         $approval_data->user_id = Auth::user()->id;
-        $approval_data->description = isCoordinator() ? "Coordinator Melakukan revisi" : "Kasir Melakukan Revisi Laporan Setoran Harian ke Brankas Dikirimkan Kembali Kepada Finance Ops";
-        $approval_data->status = "request";
+        $approval_data->description = isAuditCoordinator() ? "Coordinator Melakukan revisi" : "Kasir Melakukan Revisi Laporan Setoran Harian ke Brankas Dikirimkan Kembali Kepada Finance Ops";
+        $approval_data->status = isAuditCoordinator() ? "approve" : "request";
         $approval_data->save();
         // Replace gambar lama
 

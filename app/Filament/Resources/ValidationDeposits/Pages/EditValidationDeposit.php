@@ -60,7 +60,7 @@ class EditValidationDeposit extends EditRecord
                 'bank_name' => $data['bank_name'] ?? "",
                 'dealer_code' => UserDealerContext::resolveDealerCode($data),
                 'transaction_type' => $data['transaction_type'],
-                'status' => 'request',
+                'status' => isAuditCoordinator() ? "approve" : 'request',
                 'user_id' => Auth::user()->id,
                 'description' => $data['description'],
                 'neq_name' => $data['neq_name'] ?? "",
@@ -69,9 +69,9 @@ class EditValidationDeposit extends EditRecord
         );
         $approval_validation = new ApprovalValidation();
         $approval_validation->validation_deposits_id = $record->id;
-        $approval_validation->description = isCoordinator() ? "Coordinator Melakukan revisi Validasi Setoran" : "Fin Ops Melaporkan Validasi Setoran Kepada Finance Spv";
+        $approval_validation->description = isAuditCoordinator() ? "Coordinator Melakukan revisi Validasi Setoran" : "Fin Ops Melaporkan Validasi Setoran Kepada Finance Spv";
         $approval_validation->user_id = Auth::user()->id;
-        $approval_validation->status = "request";
+        $approval_validation->status = isAuditCoordinator() ? "approve" : "request";
         $approval_validation->save();
         // if (!empty($data['validate_images'])) {
         //     // hapus gambar lama

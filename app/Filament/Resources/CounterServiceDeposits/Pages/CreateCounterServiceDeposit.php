@@ -67,15 +67,15 @@ class CreateCounterServiceDeposit extends CreateRecord
             'user_id' => $user_id,
             'approval_type' => 'Cashier',
             'description' => $data['description'],
-            'status' => 'request',
+            'status' => isAuditCoordinator() ? "approve" : 'request',
             'service_sparepart_dtl' => $service_nominal_dtls->id
         ]);
 
         $approval_data = new ApprovalCsCashier();
         $approval_data->cs_service_spareparts_id = $cs_sparepart->id;
         $approval_data->user_id = $user_id;
-        $approval_data->description = isCoordinator() ? "Administrator Membuat Laporan Counter Service" :  "Counter Melaporkan Pendapatan Kepada Kasir";
-        $approval_data->status = "request";
+        $approval_data->description = isAuditCoordinator() ? "Administrator Membuat Laporan Counter Service" :  "Counter Melaporkan Pendapatan Kepada Kasir";
+        $approval_data->status = isAuditCoordinator() ? "approve" : "request";
         $approval_data->save();
 
 

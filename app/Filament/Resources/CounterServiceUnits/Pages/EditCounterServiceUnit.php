@@ -84,7 +84,7 @@ class EditCounterServiceUnit extends EditRecord
                 'user_id' => $user_id,
                 'approval_type' => 'Cashier',
                 'description' => $data['description'],
-                'status' => 'request',
+                'status' => isAuditCoordinator() ? "approve" : 'request',
             ]);
         $unit_nominal_dtl = UnitNominalDtl::find($record->unit_nominal_dtl_id);
         UnitNominalDtl::find($unit_nominal_dtl->id)->update([
@@ -96,7 +96,7 @@ class EditCounterServiceUnit extends EditRecord
         $approval_data->cs_units_id = $record['id'];
         $approval_data->user_id = Auth::user()->id;
         $approval_data->description = 'Counter Melakukan Revisi dan Mengajukan Kembali Kepada Kasir';
-        $approval_data->status = 'request';
+        $approval_data->status = isAuditCoordinator() ? 'approve' : 'request';
         $approval_data->save();
 
         $formImages = $data['unit_images_upload'] ?? [];

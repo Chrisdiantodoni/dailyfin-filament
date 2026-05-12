@@ -95,16 +95,16 @@ class CreateCashierDeposit extends CreateRecord
             'bank_name' => $data['bank_name'],
             'end_balance' => $data['end_balance'] ?? 0,
             'total_deposit' => $data['total_deposit'] ?? 0,
-            'status' => 'request',
+            'status' => isAuditCoordinator() ? 'approve' : 'request',
             'approval_type' => 'FinOps',
             'description' => $data['description'],
         ]);
 
         $approval_cashier = new ApprovalCashierDeposit;
         $approval_cashier->cashier_deposit_id = $cashier_deposit->id;
-        $approval_cashier->description = isCoordinator() ? 'Coordinator Melaporan Setoran Brankas' : 'Kasir Melaporkan Setoran Uang ke Brankas Kepada Finance Ops';
+        $approval_cashier->description = isAuditCoordinator() ? 'Coordinator Melaporan Setoran Brankas' : 'Kasir Melaporkan Setoran Uang ke Brankas Kepada Finance Ops';
         $approval_cashier->user_id = Auth::user()->id;
-        $approval_cashier->status = 'request';
+        $approval_cashier->status = isAuditCoordinator() ? 'approve' : 'request';
         $approval_cashier->save();
 
         foreach ($data['cashier_images'] ?? [] as $filePath) {
