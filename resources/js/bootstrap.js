@@ -3,11 +3,11 @@ import Echo from "laravel-echo";
 // Reverb Echo setup
 window.Echo = new Echo({
     broadcaster: "reverb",
-    key: import.meta.env.VITE_REVERB_APP_KEY || "app_key_abcdef123456",
-    wsHost: import.meta.env.VITE_REVERB_HOST || window.location.hostname,
-    wsPort: import.meta.env.VITE_REVERB_PORT || 8080,
-    wssPort: import.meta.env.VITE_REVERB_PORT || 8080,
-    forceTLS: false,
+    key: import.meta.env.VITE_REVERB_APP_KEY,
+    wsHost: import.meta.env.VITE_REVERB_HOST,
+    wsPort: import.meta.env.VITE_REVERB_PORT ?? 80,
+    wssPort: import.meta.env.VITE_REVERB_PORT ?? 443,
+    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? "https") === "https",
     enabledTransports: ["ws", "wss"],
 });
 
@@ -27,7 +27,7 @@ if (metaUserId) {
                     .send();
             }
             console.log("Notif Laravel:", e);
-        }
+        },
     );
 }
 
@@ -66,11 +66,21 @@ document.addEventListener("DOMContentLoaded", function () {
     var end_balance = document.getElementById("end_balance");
     var total_deposit = document.getElementById("total_deposit");
 
-    if (!expense || !bank_deposit || !invoice_nominal || !start_balance || !today_income || !end_balance || !total_deposit) {
+    if (
+        !expense ||
+        !bank_deposit ||
+        !invoice_nominal ||
+        !start_balance ||
+        !today_income ||
+        !end_balance ||
+        !total_deposit
+    ) {
         return; // Skip if not on cash form page
     }
 
     function updateTotalIncome() {
+        if (!expense || !end_balance || !total_deposit) return;
+
         var expenseValue = parseFloat(expense.value) || 0;
         var bank_depositValue = parseFloat(bank_deposit.value) || 0;
         var invoice_nominalValue = parseFloat(invoice_nominal.value) || 0;
@@ -82,6 +92,7 @@ document.addEventListener("DOMContentLoaded", function () {
             today_incomeValue -
             expenseValue -
             bank_depositValue;
+
         end_balance.value =
             end_balanceValue.toLocaleString("en-US").replace(/,/g, ".") + ",00";
 
@@ -91,14 +102,18 @@ document.addEventListener("DOMContentLoaded", function () {
             ",00";
 
         var isBelowZero = end_balanceValue < 0 || total_depositValue < 0;
+        console.log({ end_balance: end_balance.value, isBelowZero });
     }
 
-    expense.addEventListener("input", updateTotalIncome);
-    bank_deposit.addEventListener("input", updateTotalIncome);
-    invoice_nominal.addEventListener("input", updateTotalIncome);
-    start_balance.addEventListener("input", updateTotalIncome);
-    today_income.addEventListener("input", updateTotalIncome);
-    end_balance.addEventListener("input", updateTotalIncome);
-    total_deposit.addEventListener("input", updateTotalIncome);
-    updateTotalIncome();
+    // Hanya pasang event listener jika elemen form ada di halaman tersebut
+    if (expense) {
+        expense.addEventListener("input", updateTotalIncome);
+        bank_deposit.addEventListener("input", updateTotalIncome);
+        invoice_nominal.addEventListener("input", updateTotalIncome);
+        start_balance.addEventListener("input", updateTotalIncome);
+        today_income.addEventListener("input", updateTotalIncome);
+        end_balance.addEventListener("input", updateTotalIncome);
+        total_deposit.addEventListener("input", updateTotalIncome);
+        updateTotalIncome();
+    }
 });

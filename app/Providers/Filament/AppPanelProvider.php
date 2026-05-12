@@ -49,7 +49,7 @@ class AppPanelProvider extends PanelProvider
             // ->default()
             ->id('app')
             ->path('app')
-            ->brandName('')
+            ->brandName(config('app.name', 'Daily Finance'))
             ->brandLogo(asset('assets/logo-dashboard.png'))
             ->login()
             ->colors([
