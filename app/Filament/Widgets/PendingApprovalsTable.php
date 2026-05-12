@@ -2,7 +2,13 @@
 
 namespace App\Filament\Widgets;
 
+use App\Filament\Resources\CashierDeposits\CashierDepositResource;
+use App\Filament\Resources\CashMutates\CashMutateResource;
 use App\Filament\Widgets\Concerns\HasDashboardFilters;
+use App\Filament\Resources\CounterServiceDeposits\CounterServiceDepositResource;
+use App\Filament\Resources\CounterServiceUnits\CounterServiceUnitResource;
+use App\Filament\Resources\TakeoutMoney\TakeoutMoneyResource;
+use App\Filament\Resources\ValidationDeposits\ValidationDepositResource;
 use App\Models\cashier_takeout_money;
 use App\Models\CashierDeposit;
 use App\Models\CashMutate;
@@ -80,20 +86,20 @@ class PendingApprovalsTable extends Widget
 
     public function getResourceUrl(string $type, string|int $id): string
     {
-        $slug = match ($type) {
-            'Setoran Brankas' => 'cashier-deposits',
-            'Mutasi Kas' => 'cash-mutates',
-            'Validasi Setoran' => 'validation-deposits',
-            'Pengambilan Uang' => 'takeout-money',
-            'CS Sparepart' => 'counter-service-deposits',
-            'CS Unit' => 'counter-service-units',
+        $resource = match ($type) {
+            'Setoran Brankas' => CashierDepositResource::class,
+            'Mutasi Kas' => CashMutateResource::class,
+            'Validasi Setoran' => ValidationDepositResource::class,
+            'Pengambilan Uang' => TakeoutMoneyResource::class,
+            'CS Sparepart' => CounterServiceDepositResource::class,
+            'CS Unit' => CounterServiceUnitResource::class,
             default => null,
         };
 
-        if (! $slug) {
+        if (! $resource) {
             return '#';
         }
 
-        return url("/app/{$slug}/{$id}/edit");
+        return $resource::getUrl('detail', ['record' => $id]);
     }
 }
