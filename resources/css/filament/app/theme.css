@@ -264,10 +264,12 @@
     min-height: 18rem;
 }
 
+.fi-page-header-widgets table,
 .fi-page-footer-widgets table {
     min-width: 100%;
 }
 
+.fi-page-header-widgets thead th,
 .fi-page-footer-widgets thead th {
     white-space: nowrap;
     color: rgb(71 85 105);
@@ -276,12 +278,51 @@
     letter-spacing: 0;
 }
 
+.dark .fi-page-header-widgets thead th,
 .dark .fi-page-footer-widgets thead th {
     color: rgb(203 213 225);
 }
 
+.fi-page-header-widgets tbody td,
 .fi-page-footer-widgets tbody td {
     vertical-align: middle;
+}
+
+.df-dashboard-table-widget .fi-section {
+    min-height: 25rem;
+}
+
+.df-dashboard-table-widget .fi-section-content {
+    display: flex;
+    min-height: 19rem;
+}
+
+.df-dashboard-table-content {
+    display: flex;
+    flex: 1;
+    min-height: 19rem;
+    min-width: 0;
+}
+
+.df-dashboard-table-scroll {
+    flex: 1;
+    min-width: 0;
+    max-height: 19rem;
+    overflow-y: auto;
+}
+
+.df-dashboard-table-empty {
+    display: flex;
+    flex: 1;
+    min-height: 19rem;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 1.5rem;
+}
+
+.df-dashboard-table-widget tbody tr {
+    height: 3rem;
 }
 
 .df-cash-denomination-section .fi-section-content {
