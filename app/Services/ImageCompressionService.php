@@ -55,7 +55,9 @@ class ImageCompressionService
     public function convertToJpg(string $filepath, int $quality = 80)
     {
         // 1. Cek file exists (This part is correct)
-        if (!Storage::disk('public')->exists($filepath)) {
+        $disk = config('filesystems.uploads.final_disk', 'public');
+
+        if (!Storage::disk($disk)->exists($filepath)) {
             return response()->json([
                 'success' => false,
                 'message' => 'File tidak ditemukan'
@@ -64,7 +66,7 @@ class ImageCompressionService
 
         // 2. Get the absolute file path on the server
         // ImageManager::read() needs the full physical path, not the relative path.
-        $absolutePath = Storage::disk('public')->path($filepath);
+        $absolutePath = Storage::disk($disk)->path($filepath);
 
         $driver = $this->getImageDriver();
 

@@ -232,7 +232,7 @@ class CashierDepositDetail extends  ViewRecord implements HasTable
                     ImageEntry::make('cashier_images.image')
                         ->label('Gambar')
                         ->getStateUsing(fn($record) => $record->cashier_images->map(
-                            fn($img) => asset('storage/upload/deposit_box/' . $img->image)
+                            fn($img) => upload_url('deposit_box', $img->image)
                         ))
                         ->hiddenLabel()
 

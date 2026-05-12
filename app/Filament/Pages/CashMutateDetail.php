@@ -350,7 +350,7 @@ class CashMutateDetail extends  ViewRecord implements HasTable
                     ImageEntry::make('cash_images.image')
                         ->label('Gambar')
                         ->getStateUsing(fn($record) => $record->cash_images->map(
-                            fn($img) => asset('storage/upload/cash_mutates/' . $img->image)
+                            fn($img) => upload_url('cash_mutates', $img->image)
                         ))
                         ->hiddenLabel()
 

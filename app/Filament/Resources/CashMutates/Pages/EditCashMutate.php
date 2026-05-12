@@ -6,6 +6,7 @@ use App\Filament\Resources\CashMutates\CashMutateResource;
 use App\Models\ApprovalMutateCash;
 use App\Models\CashMutate;
 use App\Services\ImageCompressionService;
+use App\Support\UploadStorage;
 use Carbon\Carbon;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
@@ -119,48 +120,31 @@ class EditCashMutate extends EditRecord
 
             if (!in_array($fullPathInForm, $formImages)) {
                 // Hapus fisik & record jika sudah tidak ada di form
-                Storage::disk('public')->delete('upload/cash_mutates/' . $oldImage->image);
+                UploadStorage::deleteFinal('upload/cash_mutates/' . $oldImage->image);
                 $oldImage->delete();
             }
         });
 
         // --- B. PROSES GAMBAR BARU ---
         foreach ($formImages as $fileInput) {
-            // Cek: Jika TIDAK diawali '/upload/', berarti ini file baru yang butuh diproses
-            if (!str_starts_with($fileInput, '/upload/')) {
-
-                // Asumsi: fileInput di sini adalah path dari livewire-tmp
-                if (!Storage::disk('public')->exists($fileInput)) {
-                    continue;
-                }
-
-                $absolutePath = Storage::disk('public')->path($fileInput);
-
-                $uploadedFile = new UploadedFile(
-                    $absolutePath,
-                    basename($absolutePath),
-                    mime_content_type($absolutePath),
-                    null,
-                    true
-                );
-
-                // Generate ULID & Konversi ke WebP
-                $filename = Str::ulid()->toBase32() . '.webp';
-                $compressed = $this->imageService->convertToWebP($uploadedFile);
-
-                $targetDir = 'upload/cash_mutates';
-                Storage::disk('public')->put($targetDir . '/' . $filename, (string) $compressed);
-
-                // Simpan ke DB
-                $record->cash_images()->create([
-                    'image' => $filename,
-                ]);
-
-                // Hapus file temporary
-                Storage::disk('public')->delete($fileInput);
+            if (UploadStorage::isExistingReference($fileInput)) {
+                continue;
             }
-        }
 
+            $filename = UploadStorage::storeCompressedWebp(
+                $this->imageService,
+                $fileInput,
+                'upload/cash_mutates',
+            );
+
+            if (! $filename) {
+                continue;
+            }
+
+            $record->cash_images()->create([
+                'image' => $filename,
+            ]);
+        }
         // if (!empty($data['cash_images'])) {
         //     // hapus gambar lama
         //     $record->cash_images()->delete();

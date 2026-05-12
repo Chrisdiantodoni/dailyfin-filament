@@ -204,7 +204,7 @@ class CsSparepartDetail extends ViewRecord implements HasTable
                     ImageEntry::make('service_images.image')
                         ->label('Gambar')
                         ->getStateUsing(fn($record) => $record->service_images->map(
-                            fn($img) => asset('storage/upload/sparepart_deposit/' . $img->image)
+                            fn($img) => upload_url('sparepart_deposit', $img->image)
                         ))
                         ->hiddenLabel()
 

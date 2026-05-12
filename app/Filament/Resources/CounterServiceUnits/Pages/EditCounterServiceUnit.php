@@ -7,6 +7,7 @@ use App\Models\ApprovalCsCashiersUnit;
 use App\Models\CsUnit;
 use App\Models\UnitNominalDtl;
 use App\Services\ImageCompressionService;
+use App\Support\UploadStorage;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
@@ -106,46 +107,30 @@ class EditCounterServiceUnit extends EditRecord
 
             if (!in_array($fullPathInForm, $formImages)) {
                 // Hapus fisik & record jika sudah tidak ada di form
-                Storage::disk('public')->delete('upload/unit_deposit/' . $oldImage->image);
+                UploadStorage::deleteFinal('upload/unit_deposit/' . $oldImage->image);
                 $oldImage->delete();
             }
         });
 
         // --- B. PROSES GAMBAR BARU ---
         foreach ($formImages as $fileInput) {
-            // Cek: Jika TIDAK diawali '/upload/', berarti ini file baru yang butuh diproses
-            if (!str_starts_with($fileInput, '/upload/')) {
-
-                // Asumsi: fileInput di sini adalah path dari livewire-tmp
-                if (!Storage::disk('public')->exists($fileInput)) {
-                    continue;
-                }
-
-                $absolutePath = Storage::disk('public')->path($fileInput);
-
-                $uploadedFile = new UploadedFile(
-                    $absolutePath,
-                    basename($absolutePath),
-                    mime_content_type($absolutePath),
-                    null,
-                    true
-                );
-
-                // Generate ULID & Konversi ke WebP
-                $filename = Str::ulid()->toBase32() . '.webp';
-                $compressed = $this->imageService->convertToWebP($uploadedFile);
-
-                $targetDir = 'upload/unit_deposit';
-                Storage::disk('public')->put($targetDir . '/' . $filename, (string) $compressed);
-
-                // Simpan ke DB
-                $record->unit_images()->create([
-                    'image' => $filename,
-                ]);
-
-                // Hapus file temporary
-                Storage::disk('public')->delete($fileInput);
+            if (UploadStorage::isExistingReference($fileInput)) {
+                continue;
             }
+
+            $filename = UploadStorage::storeCompressedWebp(
+                $this->imageService,
+                $fileInput,
+                'upload/unit_deposit',
+            );
+
+            if (! $filename) {
+                continue;
+            }
+
+            $record->unit_images()->create([
+                'image' => $filename,
+            ]);
         }
         // Replace gambar lama
         // if (!empty($data['unit_images_upload'])) {

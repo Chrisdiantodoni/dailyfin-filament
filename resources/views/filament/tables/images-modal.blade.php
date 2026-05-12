@@ -1,7 +1,7 @@
 @if ($images->count() > 0)
     <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;">
         @foreach ($images as $img)
-            <img src="{{ asset("storage/upload/$folder/" . $img->image) }}" alt="Bukti Transfer"
+            <img src="{{ upload_url($folder, $img->image) }}" alt="Bukti Transfer"
                 style="
                     width: 150px; 
                     height: 150px; 

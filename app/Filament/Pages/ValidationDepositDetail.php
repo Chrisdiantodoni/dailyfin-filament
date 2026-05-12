@@ -6,6 +6,7 @@ use App\Filament\Resources\ValidationDeposits\ValidationDepositResource;
 use App\Models\ApprovalValidation;
 use App\Models\ValidationProofImage;
 use App\Services\ImageCompressionService;
+use App\Support\UploadStorage;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
@@ -72,43 +73,20 @@ class ValidationDepositDetail extends ViewRecord implements HasTable
             if (!empty($proof_imgs)) {
 
                 foreach ($proof_imgs ?? [] as $filePath) {
-                    if (!Storage::disk('public')->exists($filePath)) {
-                        continue;
-                    }
-
-                    $absolutePath = Storage::disk('public')->path($filePath);
-
-                    $uploadedFile = new UploadedFile(
-                        $absolutePath,
-                        basename($absolutePath),
-                        mime_content_type($absolutePath),
-                        null,
-                        true
+                    $filename = UploadStorage::storeCompressedWebp(
+                        $this->imageService,
+                        $filePath,
+                        'upload/validate_proof',
                     );
 
-                    // 1. Generate Nama File menggunakan ULID
-                    // Hasilnya: 01H6XCPN8... .webp
-                    $filename = Str::ulid()->toBase32() . '.webp';
-
-                    // 2. Proses Konversi (Jika imageService butuh file, tetap teruskan)
-                    $compressed = $this->imageService->convertToWebP($uploadedFile);
-
-                    // 3. Simpan via Storage Disk 'public'
-                    $targetDir = 'upload/validate_proof';
-                    $targetPath = $targetDir . '/' . $filename;
-
-                    // Put file ke storage/app/public/upload/sparepart_deposit/
-                    Storage::disk('public')->put($targetPath, (string) $compressed);
-
-
+                    if (! $filename) {
+                        continue;
+                    }
 
                     ValidationProofImage::insert([
                         'image' => $filename,
                         'validation_deposits_id' => $record->id,
                     ]);
-
-                    // 5. Hapus file temporary Filament
-                    Storage::disk('public')->delete($filePath);
                 }
             }
             $record->update([
@@ -201,7 +179,7 @@ class ValidationDepositDetail extends ViewRecord implements HasTable
 
                     FileUpload::make('proof_imgs')
                         ->label('Upload Bukti Pengecekan (Optional)')
-                        ->disk('public')
+                        ->disk(fn (): string => \App\Support\UploadStorage::temporaryDisk())
                         ->image()
                         ->multiple()
                         ->panelLayout('grid')
@@ -310,7 +288,7 @@ class ValidationDepositDetail extends ViewRecord implements HasTable
                     ImageEntry::make('validate_imgs.image')
                         ->label('Gambar')
                         ->getStateUsing(fn($record) => $record->validate_imgs->map(
-                            fn($img) => asset('storage/upload/validate/' . $img->image)
+                            fn($img) => upload_url('validate', $img->image)
                         ))
                         ->hiddenLabel()
 
@@ -329,7 +307,7 @@ class ValidationDepositDetail extends ViewRecord implements HasTable
                     ImageEntry::make('proof_imgs.image')
                         ->label('Gambar')
                         ->getStateUsing(fn($record) => $record->proof_imgs->map(
-                            fn($img) => asset('storage/upload/validate_proof/' . $img->image)
+                            fn($img) => upload_url('validate_proof', $img->image)
                         ))
                         ->hiddenLabel()
 

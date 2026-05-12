@@ -11,6 +11,7 @@ use App\Models\ServiceNominalDtl;
 use App\Models\SparepartImage;
 use App\Models\User;
 use App\Services\ImageCompressionService;
+use App\Support\UploadStorage;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Forms\Components\DatePicker;
@@ -78,42 +79,20 @@ class CreateCounterServiceDeposit extends CreateRecord
 
 
         foreach ($data['service_images_upload'] ?? [] as $filePath) {
-            if (!Storage::disk('public')->exists($filePath)) {
+            $filename = UploadStorage::storeCompressedWebp(
+                $this->imageService,
+                $filePath,
+                'upload/sparepart_deposit',
+            );
+
+            if (! $filename) {
                 continue;
             }
 
-            $absolutePath = Storage::disk('public')->path($filePath);
-
-            $uploadedFile = new UploadedFile(
-                $absolutePath,
-                basename($absolutePath),
-                mime_content_type($absolutePath),
-                null,
-                true
-            );
-
-            // 1. Generate Nama File menggunakan ULID
-            // Hasilnya: 01H6XCPN8... .webp
-            $filename = Str::ulid()->toBase32() . '.webp';
-
-            // 2. Proses Konversi (Jika imageService butuh file, tetap teruskan)
-            $compressed = $this->imageService->convertToWebP($uploadedFile);
-
-            // 3. Simpan via Storage Disk 'public'
-            $targetDir = 'upload/sparepart_deposit';
-            $targetPath = $targetDir . '/' . $filename;
-
-            // Put file ke storage/app/public/upload/sparepart_deposit/
-            Storage::disk('public')->put($targetPath, (string) $compressed);
-
-            // 4. Simpan ke Database
             ServiceImage::create([
-                'image'                    => $filename,
+                'image' => $filename,
                 'cs_service_spareparts_id' => $cs_sparepart->id,
             ]);
-
-            // 5. Hapus file temporary Filament
-            Storage::disk('public')->delete($filePath);
         }
         return $cs_sparepart;
     }

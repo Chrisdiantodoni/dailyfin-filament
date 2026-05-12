@@ -7,6 +7,7 @@ use App\Models\ApprovalValidation;
 use App\Models\ValidateImage;
 use App\Models\ValidationDeposit;
 use App\Services\ImageCompressionService;
+use App\Support\UploadStorage;
 use Carbon\Carbon;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
@@ -67,44 +68,21 @@ class CreateValidationDeposit extends CreateRecord
 
 
         foreach ($data['validate_images'] ?? [] as $filePath) {
-            if (!Storage::disk('public')->exists($filePath)) {
+            $filename = UploadStorage::storeCompressedWebp(
+                $this->imageService,
+                $filePath,
+                'upload/validate',
+            );
+
+            if (! $filename) {
                 continue;
             }
 
-            $absolutePath = Storage::disk('public')->path($filePath);
-
-            $uploadedFile = new UploadedFile(
-                $absolutePath,
-                basename($absolutePath),
-                mime_content_type($absolutePath),
-                null,
-                true
-            );
-
-            // 1. Generate Nama File menggunakan ULID
-            // Hasilnya: 01H6XCPN8... .webp
-            $filename = Str::ulid()->toBase32() . '.webp';
-
-            // 2. Proses Konversi (Jika imageService butuh file, tetap teruskan)
-            $compressed = $this->imageService->convertToWebP($uploadedFile);
-
-            // 3. Simpan via Storage Disk 'public'
-            $targetDir = 'upload/validate';
-            $targetPath = $targetDir . '/' . $filename;
-
-            // Put file ke storage/app/public/upload/sparepart_deposit/
-            Storage::disk('public')->put($targetPath, (string) $compressed);
-
-            // 4. Simpan ke Database
             ValidateImage::create([
-                'image'                    => $filename,
+                'image' => $filename,
                 'validate_deposits_id' => $validationDeposit->id,
             ]);
-
-            // 5. Hapus file temporary Filament
-            Storage::disk('public')->delete($filePath);
         }
-
         // if (isset($data['validate_images']) && count($data['validate_images']) > 0) {
         //     foreach ($data['validate_images'] as $image) {
         //         ValidateImage::create([

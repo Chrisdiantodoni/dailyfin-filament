@@ -201,7 +201,7 @@ class CsUnitDetail extends ViewRecord implements HasTable
                     ImageEntry::make('unit_images.image')
                         ->label('Gambar')
                         ->getStateUsing(fn($record) => $record->unit_images->map(
-                            fn($img) => asset('storage/upload/unit_deposit/' . $img->image)
+                            fn($img) => upload_url('unit_deposit', $img->image)
                         ))
                         ->hiddenLabel()
 

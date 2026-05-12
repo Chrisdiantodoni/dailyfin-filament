@@ -128,7 +128,7 @@ class ValidationDepositForm
 
                         FileUpload::make('validate_images')
                             ->label('Upload Bukti Setoran (Opsional)')
-                            ->disk('public')
+                            ->disk(fn (): string => \App\Support\UploadStorage::temporaryDisk())
                             ->image()
                             ->multiple()
                             ->panelLayout('grid')

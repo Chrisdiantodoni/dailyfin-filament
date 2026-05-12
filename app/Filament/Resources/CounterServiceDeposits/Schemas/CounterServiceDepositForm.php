@@ -88,7 +88,7 @@ class CounterServiceDepositForm
 
                     FileUpload::make('service_images_upload')
                         ->label('Upload Bukti Setoran (Optional)')
-                        ->disk('public')
+                        ->disk(fn (): string => \App\Support\UploadStorage::temporaryDisk())
                         ->image()
                         ->multiple()
                         ->panelLayout('grid')

@@ -16,6 +16,13 @@ if (! function_exists('formatDate')) {
     }
 }
 
+if (! function_exists('upload_url')) {
+    function upload_url(string $folder, string $filename): string
+    {
+        return \App\Support\UploadStorage::url('upload/' . trim($folder, '/') . '/' . $filename);
+    }
+}
+
 if (!function_exists('cannot')) {
     function cannot(string $permission): bool
     {

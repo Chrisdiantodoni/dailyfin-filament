@@ -62,6 +62,11 @@ return [
 
     ],
 
+    'uploads' => [
+        'temporary_disk' => env('UPLOAD_TEMP_DISK', 'public'),
+        'final_disk' => env('UPLOAD_FINAL_DISK', 'public'),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Symbolic Links

@@ -8,14 +8,13 @@ use App\Models\cashier_takeout_money;
 use App\Models\CashierDeposit;
 use App\Models\CashierDepositImage;
 use App\Services\ImageCompressionService;
+use App\Support\UploadStorage;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 use Filament\Support\Exceptions\Halt;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 
 class CreateCashierDeposit extends CreateRecord
 {
@@ -108,41 +107,20 @@ class CreateCashierDeposit extends CreateRecord
         $approval_cashier->save();
 
         foreach ($data['cashier_images'] ?? [] as $filePath) {
-            if (! Storage::disk('public')->exists($filePath)) {
+            $filename = UploadStorage::storeCompressedWebp(
+                $this->imageService,
+                $filePath,
+                'upload/deposit_box',
+            );
+
+            if (! $filename) {
                 continue;
             }
 
-            $absolutePath = Storage::disk('public')->path($filePath);
-
-            // 2. Bungkus jadi UploadedFile (Mocking untuk Service)
-            $uploadedFile = new UploadedFile(
-                $absolutePath,
-                basename($absolutePath),
-                mime_content_type($absolutePath),
-                null,
-                true
-            );
-
-            // 3. Proses Image via Service (Konversi ke WebP)
-            $filename = $this->imageService->makeUniqueFileName($uploadedFile, 'webp');
-            $compressed = $this->imageService->convertToWebP($uploadedFile);
-
-            // 4. Pastikan Directory Tujuan Ada
-            $targetDir = 'upload/deposit_box'; // ✅ Relative path untuk Storage disk
-            Storage::disk('public')->makeDirectory($targetDir); // ✅ Auto-create folder jika belum ada
-
-            // 5. Simpan file hasil kompresi via Storage (bukan public_path)
-            $targetPath = $targetDir.'/'.$filename;
-            Storage::disk('public')->put($targetPath, (string) $compressed); // ✅ Tersimpan di storage/app/public/
-
-            // 6. Simpan ke Database
             CashierDepositImage::create([
-                'image' => $filename, // ✅ Simpan relative path, bukan hanya filename
+                'image' => $filename,
                 'cashier_deposit_id' => $cashier_deposit->id,
             ]);
-
-            // 7. Hapus file temporary
-            Storage::disk('public')->delete($filePath);
         }
         // foreach ($data['cashier_images'] as $filePath) {
         //     CashierDepositImage::create([

@@ -273,7 +273,7 @@ class CashierDepositForm
                             ->reactive(),
                         FileUpload::make('cashier_images')
                             ->label('Upload Bukti Setoran (Optional)')
-                            ->disk('public')
+                            ->disk(fn (): string => \App\Support\UploadStorage::temporaryDisk())
                             ->image()
                             ->multiple()
                             ->panelLayout('grid')

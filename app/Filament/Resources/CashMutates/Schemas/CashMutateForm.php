@@ -242,7 +242,7 @@ JS;
                                 ->reactive(),
                             FileUpload::make('cash_images')
                                 ->label('Upload Bukti Fisik Kas')
-                                ->disk('public')
+                                ->disk(fn (): string => \App\Support\UploadStorage::temporaryDisk())
                                 ->image()
                                 ->multiple()
                                 ->panelLayout('grid')
