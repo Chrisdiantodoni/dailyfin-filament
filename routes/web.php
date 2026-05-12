@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ExportPdfControler;
+use App\Http\Controllers\UploadedFileController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -12,6 +13,10 @@ Route::get('/login', function () {
 });
 
 Route::middleware('auth')->group(function (): void {
+    Route::get('/uploads/{path}', [UploadedFileController::class, 'show'])
+        ->where('path', '.*')
+        ->name('uploads.show');
+
     Route::get('/export/general/pdf', [ExportPdfControler::class, 'exportPdfGeneral'])->name('export.general.pdf');
     Route::get('/export/unit/pdf', [ExportPdfControler::class, 'exportPdfUnit'])->name('export.unit.pdf');
     Route::get('/export/cashier-deposit/pdf', [ExportPdfControler::class, 'exportPdfDeposit'])->name('export.cashier-deposit.pdf');

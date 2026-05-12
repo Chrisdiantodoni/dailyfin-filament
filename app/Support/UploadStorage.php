@@ -31,12 +31,23 @@ class UploadStorage
 
     public static function url(string $path): string
     {
-        return Storage::disk(self::finalDisk())->url(ltrim($path, '/'));
+        $path = self::normalizePath($path);
+
+        if (app('router')->has('uploads.show')) {
+            return url(route('uploads.show', ['path' => $path], false));
+        }
+
+        return Storage::disk(self::finalDisk())->url($path);
     }
 
     public static function deleteFinal(string $path): void
     {
-        Storage::disk(self::finalDisk())->delete(ltrim($path, '/'));
+        Storage::disk(self::finalDisk())->delete(self::normalizePath($path));
+    }
+
+    public static function normalizePath(string $path): string
+    {
+        return trim(str_replace('\\', '/', $path), '/');
     }
 
     public static function storeCompressedWebp(
