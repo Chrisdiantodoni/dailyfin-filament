@@ -3,8 +3,9 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\BrankasOverview;
+use App\Filament\Widgets\LatestTransactionsTable;
 use App\Filament\Widgets\MutasiOverview;
-use App\Filament\Widgets\TransactionTrendChart;
+use App\Filament\Widgets\PendingApprovalsTable;
 use App\Filament\Widgets\ValidasiOverview;
 use App\Models\Dealer;
 use App\Models\DealerUser;
@@ -57,7 +58,8 @@ class Dashboard extends BaseDashboard
             BrankasOverview::class,
             ValidasiOverview::class,
             MutasiOverview::class,
-            TransactionTrendChart::class,
+            PendingApprovalsTable::class,
+            LatestTransactionsTable::class,
         ];
     }
 
