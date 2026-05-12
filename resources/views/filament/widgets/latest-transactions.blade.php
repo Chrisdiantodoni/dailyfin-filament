@@ -9,32 +9,6 @@
                     Tidak ada transaksi hari ini.
                 </div>
             @else
-                <div class="df-dashboard-mobile-list">
-                    @foreach($transactions as $tx)
-                        <div class="df-dashboard-mobile-row">
-                            <div class="df-dashboard-mobile-row-main">
-                                <x-filament::badge :color="$this->getColor($tx->type)">
-                                    {{ $tx->type }}
-                                </x-filament::badge>
-                                <x-filament::badge :color="$this->getStatusColor($tx->status)">
-                                    {{ $this->getStatusLabel($tx->status) }}
-                                </x-filament::badge>
-                            </div>
-                            <div class="df-dashboard-mobile-row-main">
-                                <span class="df-dashboard-mobile-amount">
-                                    Rp {{ number_format($tx->amount ?? 0, 0, ',', '.') }}
-                                </span>
-                                <span class="df-dashboard-mobile-time">
-                                    {{ \Carbon\Carbon::parse($tx->created_at)->format('H:i') }}
-                                </span>
-                            </div>
-                            <div class="df-dashboard-mobile-row-meta">
-                                <span>{{ \Carbon\Carbon::parse($tx->date_published)->format('d M Y') }}</span>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-
                 <div class="df-dashboard-table-scroll overflow-x-auto">
                     <table class="fi-table w-full text-left text-sm">
                         <thead>

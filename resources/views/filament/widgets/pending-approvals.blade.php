@@ -9,25 +9,6 @@
                     Tidak ada transaksi pending. Semua transaksi sudah diproses.
                 </div>
             @else
-                <div class="df-dashboard-mobile-list">
-                    @foreach($transactions as $tx)
-                        <a href="{{ $this->getResourceUrl($tx->type, $tx->id) }}" class="df-dashboard-mobile-row">
-                            <div class="df-dashboard-mobile-row-main">
-                                <x-filament::badge :color="$this->getColor($tx->type)">
-                                    {{ $tx->type }}
-                                </x-filament::badge>
-                                <span class="df-dashboard-mobile-amount">
-                                    Rp {{ number_format($tx->amount ?? 0, 0, ',', '.') }}
-                                </span>
-                            </div>
-                            <div class="df-dashboard-mobile-row-meta">
-                                <span>{{ \Carbon\Carbon::parse($tx->date_published)->format('d M Y') }}</span>
-                                <span>{{ \Carbon\Carbon::parse($tx->created_at)->format('d M Y H:i') }}</span>
-                            </div>
-                        </a>
-                    @endforeach
-                </div>
-
                 <div class="df-dashboard-table-scroll overflow-x-auto">
                     <table class="fi-table w-full text-left text-sm">
                         <thead>
