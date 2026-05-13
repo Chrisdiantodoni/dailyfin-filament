@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Filament\Resources\TakeoutMoney\TakeoutMoneyResource;
 use App\Models\approval_takeout_money;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Textarea;
@@ -61,6 +62,7 @@ class TakeoutDetail extends ViewRecord implements HasTable
             DB::beginTransaction();
             $record->update([
                 'status' => 'approve',
+                'status_deadline' => $this->resolveFinanceOperationDeadlineStatus($record),
                 'approval_type' => '',
 
             ]);
@@ -76,6 +78,14 @@ class TakeoutDetail extends ViewRecord implements HasTable
         } catch (\Throwable $th) {
             Log::info($th->getMessage());
         }
+    }
+
+    private function resolveFinanceOperationDeadlineStatus($record): string
+    {
+        $approvalTime = Carbon::now();
+        $deadline = Carbon::parse($record->date_published)->setTime(12, 0);
+
+        return $approvalTime->lte($deadline) ? 'On-time' : 'Late';
     }
 
     public function rejectFinanceOpr($record, $reason)
@@ -135,6 +145,16 @@ class TakeoutDetail extends ViewRecord implements HasTable
                             'reject'  => 'Ditolak',
                             default   => ucfirst($state),
                         }),
+                    TextEntry::make('status_deadline')
+                        ->label('Status Deadline Approval')
+                        ->badge()
+                        ->placeholder('Belum disetujui Finance Operation')
+                        ->formatStateUsing(fn (?string $state): string => $state ?: 'Belum diproses')
+                        ->color(fn (?string $state): string => match ($state) {
+                            'On-time' => 'success',
+                            'Late' => 'danger',
+                            default => 'gray',
+                        }),
 
                 ])
                 ->columns([
@@ -159,7 +179,7 @@ class TakeoutDetail extends ViewRecord implements HasTable
                         // Logic untuk konfirmasi
                         $this->confirmationFinanceOpr($record);
                     })
-                    ->hidden(fn($record) => $record->status != 'request' && (getRole() != 'IT' || getRole() != 'Cashier')),
+                    ->hidden(fn($record) => $record->status != 'request' || cannot('Konfirmasi Keluarkan Uang')),
 
 
                 Action::make('reject')->schema([
@@ -175,11 +195,11 @@ class TakeoutDetail extends ViewRecord implements HasTable
                     ')
                     ->modalSubmitActionLabel('Ya, Tolak')
                     ->modalCancelActionLabel('Batal')
-                    ->hidden(fn($record) => $record->status != 'request' && (getRole() != 'IT' || getRole() != 'Cashier'))
                     ->action(function ($record, array $data) {
                         // Logic untuk menolak
                         $this->rejectFinanceOpr($record, $data['reason']);
-                    }),
+                    })
+                    ->hidden(fn($record) => $record->status != 'request' || cannot('Konfirmasi Keluarkan Uang')),
                 EditAction::make('Edit')->label('Revisi')
                     ->color('primary')
                     ->hidden(fn($record) => $record->status != 'reject')

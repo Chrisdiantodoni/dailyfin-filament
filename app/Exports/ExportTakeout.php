@@ -54,7 +54,8 @@ class ExportTakeout implements FromCollection, WithHeadings, WithMapping
             $row->created_at,
             $lastApprovalUpdate,
             $lastUserName,
-            $isLate ? "Late" : "On-time"
+            $isLate ? "Late" : "On-time",
+            $row->status_deadline ?? 'Need Approval',
 
         ];
     }
@@ -75,7 +76,8 @@ class ExportTakeout implements FromCollection, WithHeadings, WithMapping
             'Waktu Submit',
             'Waktu Update Terakhir',
             'Last User Update',
-            'Status Deadline Submit'
+            'Status Deadline Submit',
+            'Status Deadline Approval FinOps',
         ];
     }
 }

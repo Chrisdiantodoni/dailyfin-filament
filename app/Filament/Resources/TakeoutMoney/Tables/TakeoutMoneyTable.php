@@ -67,6 +67,20 @@ class TakeoutMoneyTable
                         'reject' => 'danger',
                         default => 'gray',
                     }),
+                TextColumn::make('status_deadline')
+                    ->label('Deadline Approval')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => $state ?: 'Belum diproses')
+                    ->icon(fn (?string $state): string => match ($state) {
+                        'On-time' => 'heroicon-o-check-badge',
+                        'Late' => 'heroicon-o-clock',
+                        default => 'heroicon-o-minus-circle',
+                    })
+                    ->color(fn (?string $state): string => match ($state) {
+                        'On-time' => 'success',
+                        'Late' => 'danger',
+                        default => 'gray',
+                    }),
             ])
             ->filters([
 
@@ -114,6 +128,36 @@ class TakeoutMoneyTable
                         }
 
                         return $query->where('status', $data['status']);
+                    }),
+                Filter::make('status_deadline')
+                    ->label('Status Deadline Approval')
+                    ->schema([
+                        \Filament\Forms\Components\Select::make('deadline')
+                            ->options([
+                                'late' => 'Late',
+                                'on_time' => 'On-time',
+                                'empty' => 'Belum diproses',
+                            ])
+                            ->placeholder('Semua'),
+                    ])
+                    ->query(function ($query, array $data) {
+                        if (! isset($data['deadline'])) {
+                            return $query;
+                        }
+
+                        if ($data['deadline'] === 'late') {
+                            return $query->where('status_deadline', 'Late');
+                        }
+
+                        if ($data['deadline'] === 'on_time') {
+                            return $query->where('status_deadline', 'On-time');
+                        }
+
+                        if ($data['deadline'] === 'empty') {
+                            return $query->whereNull('status_deadline');
+                        }
+
+                        return $query;
                     }),
             ])
             ->recordUrl(null)
